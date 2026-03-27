@@ -4,6 +4,7 @@ import type { SchemaOrgResult } from './schema-org'
 
 export type AiParseResult = SchemaOrgResult & {
   cooking_method?: 'pan' | 'oven' | 'pot' | 'one-pan' | 'grill' | 'wok' | 'no-cook'
+  protein_type?: 'kjott' | 'kylling' | 'fisk' | 'vegetar'
 }
 
 const MODEL = 'claude-haiku-4-5-20251001'
@@ -22,6 +23,7 @@ const SYSTEM_PROMPT = `You are a recipe extraction assistant. Extract recipe dat
   "cuisine": string | null,
   "category": "dinner" | "breakfast" | "baking" | "dessert" | "other",
   "cooking_method": "pan" | "oven" | "pot" | "one-pan" | "grill" | "wok" | "no-cook" | null,
+  "protein_type": "kjott" | "kylling" | "fisk" | "vegetar" | null,
   "dietary": string[],
   "tags": string[],
   "ingredients": [
@@ -37,6 +39,7 @@ Rules:
 - units must be stored separately from amounts
 - ingredients_used must contain exact name strings from the ingredients array
 - cooking_method must be one of the listed values or null if unclear
+- protein_type must be one of the four values: kjott (beef, pork, lamb), kylling (chicken, turkey), fisk (fish, seafood), vegetar (no meat or fish) — or null if unclear
 - if a field is unknown, use null (never omit it)
 - category must be one of the five values listed above`
 
@@ -132,6 +135,7 @@ function parseJsonResponse(text: string): AiParseResult {
     cuisine:           typeof raw.cuisine === 'string' ? raw.cuisine : undefined,
     category:          isValidCategory(raw.category) ? raw.category : undefined,
     cooking_method:    isValidCookingMethod(raw.cooking_method) ? raw.cooking_method : undefined,
+    protein_type:      isValidProteinType(raw.protein_type) ? raw.protein_type : undefined,
     dietary:           Array.isArray(raw.dietary) ? raw.dietary.filter((d): d is string => typeof d === 'string') : undefined,
     tags:              Array.isArray(raw.tags)    ? raw.tags.filter((t): t is string => typeof t === 'string')    : undefined,
     ingredients:       (raw.ingredients as unknown[]).map(normaliseIngredient),
@@ -145,6 +149,10 @@ function isValidCategory(v: unknown): v is 'dinner' | 'breakfast' | 'baking' | '
 
 function isValidCookingMethod(v: unknown): v is 'pan' | 'oven' | 'pot' | 'one-pan' | 'grill' | 'wok' | 'no-cook' {
   return ['pan', 'oven', 'pot', 'one-pan', 'grill', 'wok', 'no-cook'].includes(v as string)
+}
+
+function isValidProteinType(v: unknown): v is 'kjott' | 'kylling' | 'fisk' | 'vegetar' {
+  return ['kjott', 'kylling', 'fisk', 'vegetar'].includes(v as string)
 }
 
 function normaliseIngredient(raw: unknown) {

@@ -17,6 +17,7 @@ export function mapToNewRecipe(
     category:          parsed.category ?? 'other',
     cuisine:           parsed.cuisine,
     cooking_method:    (parsed as AiParseResult).cooking_method,
+    protein_type:      (parsed as AiParseResult).protein_type,
     dietary:           parsed.dietary,
     tags:              parsed.tags,
     ingredients:       parsed.ingredients,

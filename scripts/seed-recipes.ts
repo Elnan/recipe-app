@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // Seed script — run with: npx tsx scripts/seed-recipes.ts
 // (ts-node won't work here — the tsconfig uses moduleResolution: "bundler")
 
@@ -36,6 +37,7 @@ const recipes: NewRecipe[] = [
     title: 'Chicken Thighs with Garlic & Lemon',
     description: 'Crispy pan-seared chicken thighs finished with a bright garlic and lemon pan sauce.',
     category: 'dinner',
+    protein_type: 'kylling',
     cooking_method: 'pan',
     cuisine: 'French',
     rating: 5,
@@ -44,8 +46,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 30,
     dietary: [],
     tags: ['chicken', 'quick', 'weeknight'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'chicken thighs', amount: 4, unit: 'pieces', notes: 'bone-in, skin-on' },
       { name: 'garlic cloves', amount: 4, unit: 'cloves', notes: 'thinly sliced' },
@@ -78,6 +78,7 @@ const recipes: NewRecipe[] = [
     title: 'Ribollita',
     description: 'Hearty Tuscan bread and bean soup. Thick, warming, and better the next day.',
     category: 'dinner',
+    protein_type: 'vegetar',
     cooking_method: 'pot',
     cuisine: 'Italian',
     rating: 4,
@@ -86,8 +87,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 45,
     dietary: ['vegetarian'],
     tags: ['soup', 'beans', 'bread', 'vegetarian'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'cannellini beans', amount: 400, unit: 'g', notes: 'cooked or canned, drained' },
       { name: 'cavolo nero', amount: 200, unit: 'g', notes: 'stems removed, roughly chopped' },
@@ -117,7 +116,61 @@ const recipes: NewRecipe[] = [
     ],
   },
 
-  // 3. Breakfast — one-pan
+  // 3. Dinner — pan
+  {
+    title: 'Beef Tacos',
+    category: 'dinner',
+    protein_type: 'kjott',
+    cooking_method: 'pan',
+    cuisine: 'Mexican',
+    servings: 2,
+    prep_time_minutes: 10,
+    cook_time_minutes: 15,
+    dietary: [],
+    tags: ['tacos', 'beef', 'quick'],
+    ingredients: [
+      { name: 'ground beef', amount: 400, unit: 'g' },
+      { name: 'taco shells', amount: 8, unit: 'pieces' },
+      { name: 'onion', amount: 1, unit: 'medium', notes: 'finely diced' },
+      { name: 'garlic', amount: 2, unit: 'cloves' },
+      { name: 'tomato', amount: 2, unit: 'medium' },
+      { name: 'cheddar cheese', amount: 100, unit: 'g', notes: 'grated' },
+      { name: 'taco seasoning', amount: 1, unit: 'tbsp' },
+    ],
+    steps: [
+      { order: 1, instruction: 'Brown ground beef in a pan over high heat, breaking it up as it cooks.', ingredients_used: ['ground beef'] },
+      { order: 2, instruction: 'Add onion, garlic and taco seasoning. Cook for 3 minutes until softened.', ingredients_used: ['onion', 'garlic', 'taco seasoning'] },
+      { order: 3, instruction: 'Serve in taco shells topped with diced tomato and grated cheese.', ingredients_used: ['taco shells', 'tomato', 'cheddar cheese'] },
+    ],
+  },
+
+  // 4. Dinner — pan
+  {
+    title: 'Salmon with Lemon Butter',
+    category: 'dinner',
+    protein_type: 'fisk',
+    cooking_method: 'pan',
+    cuisine: 'Scandinavian',
+    servings: 2,
+    prep_time_minutes: 5,
+    cook_time_minutes: 12,
+    dietary: ['gluten-free'],
+    tags: ['salmon', 'fish', 'quick'],
+    ingredients: [
+      { name: 'salmon fillet', amount: 400, unit: 'g' },
+      { name: 'butter', amount: 2, unit: 'tbsp' },
+      { name: 'lemon', amount: 1, unit: 'whole', notes: 'juiced' },
+      { name: 'garlic', amount: 2, unit: 'cloves', notes: 'crushed' },
+      { name: 'fresh dill', amount: 10, unit: 'g' },
+    ],
+    steps: [
+      { order: 1, instruction: 'Season salmon fillets with salt and pepper.', ingredients_used: ['salmon fillet'] },
+      { order: 2, instruction: 'Melt butter in a pan over medium-high heat. Cook salmon skin-side down for 4 minutes, flip and cook 3 more minutes.', ingredients_used: ['salmon fillet', 'butter'] },
+      { order: 3, instruction: 'Add garlic and lemon juice to the pan, baste the salmon. Serve with fresh dill.', ingredients_used: ['garlic', 'lemon', 'fresh dill'] },
+    ],
+  },
+
+  // 5. Breakfast — one-pan
   {
     title: 'Shakshuka',
     description: 'Eggs poached in a spiced tomato and pepper sauce. One pan, ten minutes.',
@@ -130,8 +183,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 20,
     dietary: ['vegetarian', 'gluten-free'],
     tags: ['eggs', 'vegetarian', 'gluten-free', 'spicy'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'eggs', amount: 4, unit: 'large' },
       { name: 'canned tomatoes', amount: 400, unit: 'g', notes: 'crushed' },
@@ -174,8 +225,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 60,
     dietary: ['vegetarian'],
     tags: ['banana', 'baking', 'snack', 'vegetarian'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'ripe bananas', amount: 3, unit: 'large', notes: 'well mashed' },
       { name: 'butter', amount: 115, unit: 'g', notes: 'browned and cooled' },
@@ -218,8 +267,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 5,
     dietary: ['vegetarian', 'gluten-free'],
     tags: ['lemon', 'cream', 'no-gelatine', 'vegetarian', 'gluten-free'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'double cream', amount: 600, unit: 'ml' },
       { name: 'caster sugar', amount: 150, unit: 'g' },
@@ -257,8 +304,6 @@ const recipes: NewRecipe[] = [
     cook_time_minutes: 30,
     dietary: ['vegan', 'gluten-free'],
     tags: ['chickpeas', 'snack', 'vegan', 'gluten-free', 'spicy'],
-    image_url: undefined,
-    source_url: undefined,
     ingredients: [
       { name: 'chickpeas', amount: 400, unit: 'g', notes: 'canned, drained and thoroughly dried' },
       { name: 'harissa paste', amount: 2, unit: 'tbsp' },

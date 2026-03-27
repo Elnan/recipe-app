@@ -60,11 +60,23 @@ is built around. Never bypass it, never change it without discussion.
 
 ## How we work
 - Plan before building: confirm file list and architecture before writing code
-- Pause after each file — tell me the file path only when ready for review
+- Pause after each file — print the absolute path only when ready for review
+  (e.g. "Ready for review: /Users/olavelnan/Documents/dev/recipe-app/lib/ai-logger.ts")
+  and wait for approval. Always use absolute paths so files are clickable in Cursor.
   (e.g. "Ready for review: /lib/ai-logger.ts") and wait for approval
 - Never add features not in the approved spec
 - Follow AI cost rules on every task that touches parsing code
 - Run /checkpoint at the end of each feature to commit and push
+
+## External APIs
+- Kassal.app — Norwegian grocery product data (package sizes, prices)
+  - Base URL: https://kassal.app/api/v1
+  - Auth: Bearer token in Authorization header
+  - Key: stored in NEXT_PUBLIC_SUPABASE_URL — NO, stored in KASSAL_API_KEY env var
+  - Rate limit: 60 req/min (free tier)
+  - Use for: ingredient package size lookup (weight + weight_unit)
+  - Never call from client-side — server-side only (API routes)
+  - Cache results — never call Kassalapp twice for the same ingredient name
 
 ## Planned: icon/text toggle for method and dietary badges
 - METHOD_META and DIETARY_META in RecipeCard.tsx and FilterDrawer.tsx

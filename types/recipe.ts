@@ -33,6 +33,7 @@ export interface Recipe {
 
   cuisine?: string
   cooking_method?: string
+  protein_type?: 'kjott' | 'kylling' | 'fisk' | 'vegetar'
   dietary?: string[]       // e.g. ["vegetarian", "gluten-free"]
   tags?: string[]
 
@@ -45,3 +46,20 @@ export interface Recipe {
 
 // Omit DB-managed fields when creating a new recipe
 export type NewRecipe = Omit<Recipe, 'id' | 'created_at' | 'updated_at'>
+
+export interface Menu {
+  id: string
+  created_at: string
+  updated_at: string
+  name: string
+  week_number?: number
+  year?: number
+  is_active: boolean
+  dominant_protein?: 'kjott' | 'kylling' | 'fisk' | 'vegetar'
+}
+
+export interface MenuWithRecipes extends Menu {
+  recipes: Recipe[]
+}
+
+export type NewMenu = Omit<Menu, 'id' | 'created_at' | 'updated_at'>
