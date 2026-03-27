@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import Link from 'next/link'
 import RecipeCard from '../../components/recipes/RecipeCard'
 import FilterDrawer from '../../components/recipes/FilterDrawer'
+import ImportDrawer from '../../components/recipes/ImportDrawer'
 import { getRecipes, type RecipeFilters } from '../../../lib/recipes'
-import type { Recipe, RecipeCategory } from '../../../types/recipe'
+import type { Recipe, RecipeCategory, NewRecipe } from '../../../types/recipe'
 
 const CATEGORIES: Array<'all' | RecipeCategory> = [
   'all', 'dinner', 'breakfast', 'baking', 'dessert', 'other',
@@ -30,13 +30,23 @@ export default function RecipesPage() {
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<'all' | RecipeCategory>('all')
   const [filters, setFilters] = useState<RecipeFilters>({})
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpen,        setDrawerOpen]        = useState(false)
+  const [importDrawerOpen,  setImportDrawerOpen]  = useState(false)
+  const [importPrefillText, setImportPrefillText] = useState<string | undefined>()
 
   useEffect(() => {
     getRecipes()
       .then(setAllRecipes)
       .catch(err => console.error('getRecipes error:', err))
       .finally(() => setLoading(false))
+
+    // Web Share Target: open ImportDrawer pre-filled if share text is waiting
+    const prefill = sessionStorage.getItem('import:prefill')
+    if (prefill) {
+      sessionStorage.removeItem('import:prefill')
+      setImportPrefillText(prefill)
+      setImportDrawerOpen(true)
+    }
   }, [])
 
   // Client-side filtering
@@ -123,13 +133,13 @@ export default function RecipesPage() {
                 {loading ? '…' : `${filtered.length} of ${allRecipes.length}`}
               </p>
             </div>
-            <Link
-              href="/recipes/new"
+            <button
+              onClick={() => setImportDrawerOpen(true)}
               className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-80"
               style={{ background: '#f4a261', fontFamily: 'var(--font-geist-mono)' }}
             >
               + Add
-            </Link>
+            </button>
           </div>
 
           {/* Search + filter icon */}
@@ -237,6 +247,24 @@ export default function RecipesPage() {
         filters={filters}
         onChange={setFilters}
         onClose={() => setDrawerOpen(false)}
+      />
+
+      {/* Import drawer */}
+      <ImportDrawer
+        open={importDrawerOpen}
+        onClose={() => setImportDrawerOpen(false)}
+        prefillText={importPrefillText}
+        onSave={async (recipe: NewRecipe) => {
+          const res  = await fetch('/api/recipes', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(recipe),
+          })
+          if (res.ok) {
+            const { recipe: saved } = await res.json()
+            setAllRecipes(prev => [saved, ...prev])
+          }
+        }}
       />
     </div>
   )

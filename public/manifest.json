@@ -1,0 +1,16 @@
+{
+  "name": "Recipes",
+  "short_name": "Recipes",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "start_url": "/recipes",
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "text": "text"
+    }
+  },
+  "icons": []
+}

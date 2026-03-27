@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Recipe, RecipeCategory } from '../types/recipe'
+import type { Recipe, RecipeCategory, NewRecipe } from '../types/recipe'
 
 export interface RecipeFilters {
   category?: RecipeCategory
@@ -39,6 +39,28 @@ export async function getRecipes(filters?: RecipeFilters): Promise<Recipe[]> {
   }
 
   return recipes
+}
+
+export async function getRecipeBySourceUrl(sourceUrl: string): Promise<Recipe | null> {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .eq('source_url', sourceUrl)
+    .maybeSingle()
+
+  if (error) return null
+  return data as Recipe | null
+}
+
+export async function saveRecipe(recipe: NewRecipe): Promise<Recipe> {
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert(recipe)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Recipe
 }
 
 export async function getRecipe(id: string): Promise<Recipe> {
