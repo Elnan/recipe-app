@@ -41,7 +41,8 @@ Rules:
 - cooking_method must be one of the listed values or null if unclear
 - protein_type must be one of the four values: kjott (beef, pork, lamb), kylling (chicken, turkey), fisk (fish, seafood), vegetar (no meat or fish) — or null if unclear
 - if a field is unknown, use null (never omit it)
-- category must be one of the five values listed above`
+- category must be one of the five values listed above
+- For Norwegian recipes: middag/hovedrett = dinner, frokost/nsj = breakfast, kake/bakst/dessert = baking or dessert. When in doubt for a main dish, prefer dinner over other.`
 
 export type AiParseInput =
   | { type: 'text';  content: string;                    sourceIdentifier?: string }

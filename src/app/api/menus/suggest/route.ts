@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { getRecipes } from '../../../../../lib/recipes'
 import { logAiCall } from '../../../../../lib/ai-logger'
+import { getPackageSize } from '../../../../../lib/kassal'
+import { toGrams, toMl, formatWeight, formatVolume } from '../../../../../lib/unit-converter'
 import type { Recipe } from '../../../../../types/recipe'
 
 const MODEL = 'claude-haiku-4-5-20251001'
@@ -37,19 +39,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ recipe_ids: ids })
     }
 
-    const anchorIngredients = anchor.ingredients.map((ing) => ing.name).join(', ')
+    // Fetch package sizes for anchor ingredients
+    const anchorIngredients = await Promise.all(
+      anchor.ingredients.map(async ing => {
+        const pkg = await getPackageSize(ing.name, anchor.source_url ?? undefined)
+        const usedG  = ing.unit ? toGrams(ing.amount, ing.unit)  : null
+        const usedMl = ing.unit ? toMl(ing.amount, ing.unit)     : null
+        const leftoverG  = pkg?.packageSizeG  != null && usedG  != null
+          ? Math.max(0, pkg.packageSizeG  - usedG)  : null
+        const leftoverMl = pkg?.packageSizeMl != null && usedMl != null
+          ? Math.max(0, pkg.packageSizeMl - usedMl) : null
+        return {
+          name:         ing.name,
+          usedG,        usedMl,
+          packageSizeG:  pkg?.packageSizeG,
+          packageSizeMl: pkg?.packageSizeMl,
+          leftoverG,    leftoverMl,
+          isFlexible:   pkg?.unitType === 'piece' || !pkg,
+        }
+      })
+    )
+
+    // Build leftover context string
+    const leftoverLines = anchorIngredients
+      .filter(i => i.leftoverG != null || i.leftoverMl != null)
+      .map(i => {
+        if (i.leftoverG  != null) return `- ${i.name}: ${formatWeight(i.leftoverG)} leftover`
+        if (i.leftoverMl != null) return `- ${i.name}: ${formatVolume(i.leftoverMl)} leftover`
+      })
+      .join('\n')
 
     const candidateList = candidates
       .map((r: Recipe) => {
-        const ings = r.ingredients.map((ing) => ing.name).join(', ')
+        const ings = r.ingredients.map(ing => ing.name).join(', ')
         return `ID: ${r.id} | Title: ${r.title} | Ingredients: ${ings}`
       })
       .join('\n')
 
-    const prompt = `Given this anchor dinner recipe and its ingredients, suggest 3 other dinner recipes from the list that would work well in the same week because they share ingredients and minimize waste. Consider protein variety. Return ONLY a JSON array of 3 recipe IDs from the provided list.
+    const prompt = `Given this anchor dinner and its leftovers after cooking, suggest 3 dinner recipes from the list that efficiently use these leftovers and minimise waste. Consider protein variety across the week. Return ONLY a JSON array of 3 recipe IDs.
 
-Anchor recipe: ${anchor.title}
-Anchor ingredients: ${anchorIngredients}
+Anchor: ${anchor.title}
+${leftoverLines ? `Leftovers available:\n${leftoverLines}` : 'No leftover data available yet.'}
 
 Available recipes:
 ${candidateList}`
@@ -68,7 +98,7 @@ ${candidateList}`
       sourceIdentifier: `menu-suggest:${anchorId}`,
     })
 
-    const text = response.content.find((blk) => blk.type === 'text')?.text ?? ''
+    const text  = response.content.find(blk => blk.type === 'text')?.text ?? ''
     const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
 
     let recipeIds: string[]

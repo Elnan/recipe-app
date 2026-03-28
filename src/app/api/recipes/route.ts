@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const saved = await saveRecipe(recipe as NewRecipe)
+
+    // Trigger ingredient lookup in background — non-blocking
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/ingredients/lookup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ recipe_id: saved.id }),
+    }).catch(() => { /* non-fatal */ })
+
     return NextResponse.json({ recipe: saved }, { status: 201 })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

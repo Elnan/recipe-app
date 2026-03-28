@@ -72,7 +72,7 @@ is built around. Never bypass it, never change it without discussion.
 - Kassal.app — Norwegian grocery product data (package sizes, prices)
   - Base URL: https://kassal.app/api/v1
   - Auth: Bearer token in Authorization header
-  - Key: stored in NEXT_PUBLIC_SUPABASE_URL — NO, stored in KASSAL_API_KEY env var
+  - Key: stored in KASSAL_API_KEY env var
   - Rate limit: 60 req/min (free tier)
   - Use for: ingredient package size lookup (weight + weight_unit)
   - Never call from client-side — server-side only (API routes)
@@ -102,3 +102,8 @@ is built around. Never bypass it, never change it without discussion.
 | 4 | params is a Promise in Next.js 15 App Router | F1 |
 | 5 | METHOD_META/DIETARY_META duplicated in RecipeCard + FilterDrawer — extract to /lib/recipe-meta.ts when icons added | F1 |
 | 6 | Show file path only for review, not code in terminal | F2 |
+| 7 | Fixed bottom bars need bottom: 64 not bottom: 0 to clear the BottomNav | F3a |
+| 8 | All Anthropic client instantiations should pass apiKey: process.env.ANTHROPIC_API_KEY explicitly | F3a |
+| 9 | Seed recipes must have protein_type set for menu features to work | F3a |
+
+

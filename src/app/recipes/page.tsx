@@ -265,6 +265,17 @@ export default function RecipesPage() {
             setAllRecipes(prev => [saved, ...prev])
           }
         }}
+        onUpdate={async (id, recipe) => {
+          const res = await fetch(`/api/recipes/${id}`, {
+            method:  'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(recipe),
+          })
+          if (res.ok) {
+            const { recipe: updated } = await res.json()
+            setAllRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))
+          }
+        }}
       />
     </div>
   )

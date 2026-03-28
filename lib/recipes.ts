@@ -63,6 +63,18 @@ export async function saveRecipe(recipe: NewRecipe): Promise<Recipe> {
   return data as Recipe
 }
 
+export async function updateRecipe(id: string, data: Partial<NewRecipe>): Promise<Recipe> {
+  const { data: updated, error } = await supabase
+    .from('recipes')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return updated as Recipe
+}
+
 export async function getRecipe(id: string): Promise<Recipe> {
   const { data, error } = await supabase
     .from('recipes')

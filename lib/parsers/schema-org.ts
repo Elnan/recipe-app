@@ -15,9 +15,39 @@ export type SchemaOrgResult = {
   steps:              RecipeStep[]
 }
 
+function detectCategoryFromHtml(html: string): RecipeCategory | undefined {
+  const lower = html.toLowerCase()
+
+  // Norwegian
+  if (lower.includes('middagsrett') ||
+      lower.includes('hovedrett') ||
+      lower.includes('middag'))          return 'dinner'
+  if (lower.includes('frokost') ||
+      lower.includes('lunsj'))           return 'breakfast'
+  if (lower.includes('bakst') ||
+      lower.includes('bolle'))           return 'baking'
+
+  // English
+  if (lower.includes('main course') ||
+      lower.includes('main dish') ||
+      lower.includes('dinner') ||
+      lower.includes('entree'))          return 'dinner'
+  if (lower.includes('breakfast') ||
+      lower.includes('brunch'))          return 'breakfast'
+  if (lower.includes('baking') ||
+      lower.includes(' cake') ||
+      lower.includes('pastry') ||
+      lower.includes(' bread'))          return 'baking'
+  if (lower.includes('dessert') ||
+      lower.includes('pudding'))         return 'dessert'
+
+  return undefined
+}
+
 // Returns null if extraction fails or result is missing critical fields
 export function extractSchemaOrg(html: string): SchemaOrgResult | null {
   const scripts = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
+  const htmlCategory = detectCategoryFromHtml(html)
 
   for (const match of scripts) {
     try {
@@ -34,6 +64,9 @@ export function extractSchemaOrg(html: string): SchemaOrgResult | null {
       if (!node) continue
 
       const result = mapNode(node)
+      if (result && (!result.category || result.category === 'other') && htmlCategory) {
+        result.category = htmlCategory
+      }
       if (isComplete(result)) return result
     } catch {
       // malformed JSON — try next script block
@@ -197,6 +230,15 @@ function parseIngredientString(s: string): Ingredient {
   if (unit === 'pk')   unit = 'package'
   if (unit === 'boks') unit = 'can'
   // dl kept as-is
+
+  // Clean the name: strip leading/trailing dots and spaces
+  name = name.replace(/^[\s.]+|[\s.]+$/g, '').trim()
+
+  // Strip Norwegian quantity descriptors that leaked into name
+  // e.g. "2 stk", "1 ss", "½ ts", "ca. 3"
+  name = name.replace(/^[\d\s\u00BC-\u00BE\u2150-\u215E\/]+\s*(stk|ss|ts|dl|g|kg|ml|l|pk)\s+/i, '')
+  name = name.replace(/^ca\.\s*[\d\s\u00BC-\u00BE\u2150-\u215E\/]+\s*/i, '')
+  name = name.trim()
 
   return { name: name || clean, amount, unit, notes }
 }

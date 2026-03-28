@@ -6,10 +6,11 @@ import { formatAmount } from '../../../lib/format'
 import RecipePreview from './RecipePreview'
 
 interface ImportDrawerProps {
-  open:         boolean
-  onClose:      () => void
-  onSave:       (recipe: NewRecipe) => Promise<void>
-  prefillText?: string
+  open:          boolean
+  onClose:       () => void
+  onSave:        (recipe: NewRecipe) => Promise<void>
+  onUpdate?:     (id: string, recipe: NewRecipe) => Promise<void>
+  prefillText?:  string
 }
 
 type Tab          = 'url' | 'text' | 'photo'
@@ -291,7 +292,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
 
 // ── ImportDrawer ──────────────────────────────────────────────────────────────
 
-export default function ImportDrawer({ open, onClose, onSave, prefillText }: ImportDrawerProps) {
+export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillText }: ImportDrawerProps) {
   const [tab,           setTab]           = useState<Tab>('url')
   const [drawerState,   setDrawerState]   = useState<DrawerState>('input')
   const [urlInput,      setUrlInput]      = useState('')
@@ -435,7 +436,11 @@ export default function ImportDrawer({ open, onClose, onSave, prefillText }: Imp
   async function handleSave() {
     if (!parsedRecipe) return
     try {
-      await onSave(parsedRecipe)
+      if (cachedRecipe && onUpdate) {
+        await onUpdate(cachedRecipe.id, parsedRecipe)
+      } else {
+        await onSave(parsedRecipe)
+      }
       handleClose()
     } catch {
       setError('Failed to save recipe — please try again')
