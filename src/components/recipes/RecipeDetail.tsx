@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Recipe, RecipeCategory } from '../../../types/recipe'
+import type { Recipe, NewRecipe, RecipeCategory } from '../../../types/recipe'
+import RecipeEdit from './RecipeEdit'
+import { RecipeIcon } from '../../../lib/recipe-icons'
 
 const CATEGORY_ACCENT: Record<RecipeCategory, string> = {
   dinner:    '#e94560',
@@ -51,19 +53,55 @@ function formatAmount(n: number): string {
   return parseFloat(n.toFixed(2)).toString()
 }
 
-export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
-  const router = useRouter()
-  const [scaledServings, setScaledServings] = useState(recipe.servings)
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients')
-  const [expandedStep, setExpandedStep] = useState<number | null>(null)
+interface RecipeDetailProps {
+  recipe:            Recipe
+  onRecipeUpdate?:   (updated: Recipe) => void
+}
 
-  const scale = scaledServings / recipe.servings
-  const accent = CATEGORY_ACCENT[recipe.category] ?? CATEGORY_ACCENT.other
-  const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0)
+export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailProps) {
+  const router = useRouter()
+  const [isEditing,       setIsEditing]       = useState(false)
+  const [currentRecipe,   setCurrentRecipe]   = useState(recipe)
+  const [scaledServings,  setScaledServings]  = useState(currentRecipe.servings)
+  const [activeTab,       setActiveTab]       = useState<'ingredients' | 'steps'>('ingredients')
+  const [expandedStep,    setExpandedStep]    = useState<number | null>(null)
+
+  // ── Edit mode ──────────────────────────────────────────────────────────────
+
+  if (isEditing) {
+    return (
+      <RecipeEdit
+        recipe={currentRecipe}
+        onCancel={() => setIsEditing(false)}
+        onSave={async (updates: Partial<NewRecipe>) => {
+          const res = await fetch(`/api/recipes/${currentRecipe.id}`, {
+            method:  'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(updates),
+          })
+          if (res.ok) {
+            const { recipe: updated } = await res.json()
+            setCurrentRecipe(updated)
+            onRecipeUpdate?.(updated)
+            router.refresh()
+            setIsEditing(false)
+          }
+        }}
+        onDelete={async () => {
+          await fetch(`/api/recipes/${currentRecipe.id}`, { method: 'DELETE' })
+          router.back()
+        }}
+      />
+    )
+  }
+
+  const scale = scaledServings / currentRecipe.servings
+  const accent = CATEGORY_ACCENT[currentRecipe.category] ?? CATEGORY_ACCENT.other
+  const totalTime = (currentRecipe.prep_time_minutes ?? 0) + (currentRecipe.cook_time_minutes ?? 0)
 
   // Ingredient names used in the currently expanded step
   const stepIngredients = expandedStep != null
-    ? new Set(recipe.steps.find(s => s.order === expandedStep)?.ingredients_used ?? [])
+    ? new Set(currentRecipe.steps.find(s => s.order === expandedStep)?.ingredients_used ?? [])
     : null
 
   function adjustServings(delta: number) {
@@ -79,18 +117,26 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
 
       {/* ── Hero ── */}
       <div className="relative h-72 overflow-hidden">
-        {recipe.image_url ? (
+        {currentRecipe.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={recipe.image_url}
-            alt={recipe.title}
+            src={currentRecipe.image_url}
+            alt={currentRecipe.title}
             className="absolute inset-0 h-full w-full object-cover"
           />
+        ) : currentRecipe.image_icon ? (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: CATEGORY_BG[currentRecipe.category] ?? CATEGORY_BG.other }}
+          >
+            <RecipeIcon icon={currentRecipe.image_icon} color={accent} size={80} />
+          </div>
         ) : (
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ background: CATEGORY_BG[recipe.category] ?? CATEGORY_BG.other }}
+            style={{ background: CATEGORY_BG[currentRecipe.category] ?? CATEGORY_BG.other }}
           >
-            <span className="text-[80px] opacity-20">{CATEGORY_EMOJI[recipe.category]}</span>
+            <span className="text-[80px] opacity-20">{CATEGORY_EMOJI[currentRecipe.category]}</span>
           </div>
         )}
 
@@ -116,6 +162,19 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
           ← Back
         </button>
 
+        {/* Edit button */}
+        <button
+          onClick={() => setIsEditing(true)}
+          className="absolute right-4 top-4 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] text-white/70 hover:text-white transition-colors"
+          style={{
+            background:     'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(8px)',
+            fontFamily:     'var(--font-geist-mono)',
+          }}
+        >
+          Edit
+        </button>
+
         {/* Hero badges + title */}
         <div className="absolute bottom-5 left-5 right-5">
           <div className="flex items-center gap-[5px] mb-3 flex-wrap">
@@ -124,39 +183,58 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
               className="rounded-[5px] px-[9px] py-[3px] text-[9px] font-medium uppercase tracking-[0.09em] text-[#0a0a0a]"
               style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
             >
-              {CATEGORY_EMOJI[recipe.category]} {recipe.category}
+              {CATEGORY_EMOJI[currentRecipe.category]} {currentRecipe.category}
             </span>
 
             {/* Cooking method */}
-            {recipe.cooking_method && (
+            {currentRecipe.cooking_method && (
               <span
                 className="rounded-[5px] border px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em]"
                 style={{
-                  fontFamily: 'var(--font-geist-mono)',
-                  background: 'rgba(0,0,0,0.55)',
+                  fontFamily:     'var(--font-geist-mono)',
+                  background:     'rgba(0,0,0,0.55)',
                   backdropFilter: 'blur(6px)',
-                  borderColor: `${accent}55`,
-                  color: accent,
+                  borderColor:    `${accent}55`,
+                  color:          accent,
                 }}
               >
-                {recipe.cooking_method}
+                {currentRecipe.cooking_method}
               </span>
             )}
 
             {/* Rating */}
-            {recipe.rating != null && (
+            {currentRecipe.rating != null && (
               <span
                 className="rounded-[5px] border px-[9px] py-[3px] text-[10px]"
                 style={{
-                  background: 'rgba(0,0,0,0.55)',
+                  background:     'rgba(0,0,0,0.55)',
                   backdropFilter: 'blur(6px)',
-                  borderColor: 'rgba(255,255,255,0.08)',
+                  borderColor:    'rgba(255,255,255,0.08)',
                 }}
               >
-                {'★'.repeat(recipe.rating)}
+                {'★'.repeat(currentRecipe.rating)}
                 <span style={{ color: 'rgba(255,255,255,0.15)' }}>
-                  {'★'.repeat(5 - recipe.rating)}
+                  {'★'.repeat(5 - currentRecipe.rating)}
                 </span>
+              </span>
+            )}
+
+            {/* No protein type warning */}
+            {!currentRecipe.protein_type && (
+              <span
+                style={{
+                  background:    'rgba(255,180,0,0.15)',
+                  border:        '1px solid rgba(255,180,0,0.3)',
+                  color:         'rgba(255,180,0,0.8)',
+                  borderRadius:  6,
+                  padding:       '3px 8px',
+                  fontFamily:    'var(--font-geist-mono)',
+                  fontSize:      9,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.07em',
+                }}
+              >
+                No protein type
               </span>
             )}
           </div>
@@ -168,7 +246,7 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
               textShadow: '0 2px 8px rgba(0,0,0,0.6)',
             }}
           >
-            {recipe.title}
+            {currentRecipe.title}
           </h1>
         </div>
       </div>
@@ -177,9 +255,9 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
       <div className="mx-auto max-w-2xl px-5">
 
         {/* Dietary pills — below title */}
-        {recipe.dietary && recipe.dietary.length > 0 && (
+        {currentRecipe.dietary && currentRecipe.dietary.length > 0 && (
           <div className="flex flex-wrap gap-[5px] mt-4">
-            {recipe.dietary.map(d => (
+            {currentRecipe.dietary.map(d => (
               <div
                 key={d}
                 className="uppercase tracking-[0.07em] border"
@@ -200,29 +278,29 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
         )}
 
         {/* Description */}
-        {recipe.description && (
+        {currentRecipe.description && (
           <p
             className="mt-5 text-[14px] leading-relaxed text-white/40"
             style={{ fontFamily: 'var(--font-geist-sans)' }}
           >
-            {recipe.description}
+            {currentRecipe.description}
           </p>
         )}
 
         {/* Meta pills */}
-        {(totalTime > 0 || recipe.cuisine) && (
+        {(totalTime > 0 || currentRecipe.cuisine) && (
           <div className="mt-4 flex gap-2 flex-wrap">
-            {recipe.prep_time_minutes != null && (
-              <MetaPill label="Prep" value={`${recipe.prep_time_minutes}m`} />
+            {currentRecipe.prep_time_minutes != null && (
+              <MetaPill label="Prep" value={`${currentRecipe.prep_time_minutes}m`} />
             )}
-            {recipe.cook_time_minutes != null && (
-              <MetaPill label="Cook" value={`${recipe.cook_time_minutes}m`} />
+            {currentRecipe.cook_time_minutes != null && (
+              <MetaPill label="Cook" value={`${currentRecipe.cook_time_minutes}m`} />
             )}
             {totalTime > 0 && (
               <MetaPill label="Total" value={`${totalTime}m`} />
             )}
-            {recipe.cuisine && (
-              <MetaPill label="Cuisine" value={recipe.cuisine} />
+            {currentRecipe.cuisine && (
+              <MetaPill label="Cuisine" value={currentRecipe.cuisine} />
             )}
           </div>
         )}
@@ -278,8 +356,8 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
               }}
             >
               {tab === 'ingredients'
-                ? `Ingredients (${recipe.ingredients.length})`
-                : `Steps (${recipe.steps.length})`}
+                ? `Ingredients (${currentRecipe.ingredients.length})`
+                : `Steps (${currentRecipe.steps.length})`}
             </button>
           ))}
         </div>
@@ -305,7 +383,7 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
             </div>
           )}
           <ul className="mt-4 space-y-1">
-            {recipe.ingredients.map((ing, i) => {
+            {currentRecipe.ingredients.map((ing, i) => {
               const highlighted = stepIngredients?.has(ing.name)
               return (
                 <li
@@ -343,9 +421,9 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
         {/* ── Steps tab ── */}
         {activeTab === 'steps' && (
           <ol className="mt-4 space-y-2">
-            {recipe.steps.map(step => {
+            {currentRecipe.steps.map(step => {
               const isExpanded = expandedStep === step.order
-              const stepIngs = recipe.ingredients.filter(ing =>
+              const stepIngs = currentRecipe.ingredients.filter(ing =>
                 step.ingredients_used.includes(ing.name)
               )
 
@@ -430,10 +508,10 @@ export default function RecipeDetail({ recipe }: { recipe: Recipe }) {
 
       {/* ── Sticky bottom button ── */}
       <div
-        className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4"
+        className="fixed left-0 right-0 px-5 pb-8 pt-4"
         style={{
-          background:
-            'linear-gradient(to top, rgba(10,10,10,1) 60%, rgba(10,10,10,0))',
+          bottom:     64,
+          background: 'linear-gradient(to top, rgba(10,10,10,1) 60%, rgba(10,10,10,0))',
         }}
       >
         <div className="mx-auto max-w-2xl">

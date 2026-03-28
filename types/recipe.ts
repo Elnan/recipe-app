@@ -1,4 +1,5 @@
 // Canonical Recipe type — never change without discussion (see CLAUDE.md)
+import type { RecipeIconKey } from '../lib/recipe-icons'
 
 export type RecipeCategory = 'dinner' | 'breakfast' | 'baking' | 'dessert' | 'other'
 
@@ -22,6 +23,7 @@ export interface Recipe {
   description?: string
   source_url?: string      // original URL if imported
   image_url?: string
+  image_icon?: RecipeIconKey
 
   servings: number         // base serving count — scaling is client-side only
   prep_time_minutes?: number

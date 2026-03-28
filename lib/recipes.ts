@@ -75,6 +75,14 @@ export async function updateRecipe(id: string, data: Partial<NewRecipe>): Promis
   return updated as Recipe
 }
 
+export async function deleteRecipe(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function getRecipe(id: string): Promise<Recipe> {
   const { data, error } = await supabase
     .from('recipes')

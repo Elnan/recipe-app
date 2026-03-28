@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Recipe, RecipeCategory } from '../../../types/recipe'
+import { RecipeIcon } from '../../../lib/recipe-icons'
 
 const CATEGORY_ACCENT: Record<RecipeCategory, string> = {
   dinner:    '#e94560',
@@ -114,6 +115,13 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
               alt={recipe.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
             />
+          ) : recipe.image_icon ? (
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ background: CATEGORY_BG[recipe.category] ?? CATEGORY_BG.other }}
+            >
+              <RecipeIcon icon={recipe.image_icon} color={accent} size={52} />
+            </div>
           ) : (
             <div
               className="absolute inset-0 flex items-center justify-center"
