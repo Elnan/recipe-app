@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+
 export type StoreSection =
   | 'produce' | 'meat' | 'pålegg' | 'bread' | 'frozen'
   | 'pantry'  | 'condiments' | 'dairy'  | 'drinks' | 'snacks' | 'other'
@@ -95,4 +97,36 @@ export function getIngredientPreset(name: string): {
     amount: defaults?.amount ?? 1,
     unit:   defaults?.unit   ?? 'stk',
   }
+}
+
+export async function getIngredientPresetWithDB(
+  name: string,
+): Promise<{ section: StoreSection; amount: number; unit: string }> {
+  const { data } = await supabase
+    .from('ingredient_products')
+    .select('store_section')
+    .eq('ingredient_name', name.toLowerCase().trim())
+    .maybeSingle()
+
+  const preset = getIngredientPreset(name)
+  if (data?.store_section) {
+    preset.section = data.store_section as StoreSection
+  }
+  return preset
+}
+
+export async function saveIngredientSection(
+  name: string,
+  section: StoreSection,
+): Promise<void> {
+  const { error } = await supabase.from('ingredient_products').upsert(
+    {
+      ingredient_name:  name.toLowerCase().trim(),
+      store_section:    section,
+      lookup_attempted: true,
+      unit_type:        'unknown',
+    },
+    { onConflict: 'ingredient_name' },
+  )
+  if (error) throw error
 }

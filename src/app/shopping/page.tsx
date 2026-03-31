@@ -25,6 +25,8 @@ export default function ShoppingPage() {
   const [recipes, setRecipes]                 = useState<Recipe[]>([])
   const [menus, setMenus]                     = useState<MenuWithRecipes[]>([])
   const [panelHeight, setPanelHeight]         = useState(0)
+  const [mergeSourceId, setMergeSourceId]     = useState<string | null>(null)
+  const [mergeTargetId, setMergeTargetId]     = useState<string | null>(null)
 
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -50,7 +52,9 @@ export default function ShoppingPage() {
     return () => observer.disconnect()
   }, [])
 
-  const selectedItem = items.find(i => i.id === selectedId) ?? null
+  const selectedItem   = items.find(i => i.id === selectedId)   ?? null
+  const mergeSource    = items.find(i => i.id === mergeSourceId) ?? null
+  const mergeTarget    = items.find(i => i.id === mergeTargetId) ?? null
 
   // ── Remove ────────────────────────────────────────────────────────────────
   function handleRemove(item: ShoppingListItem) {
@@ -110,6 +114,16 @@ export default function ShoppingPage() {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(patch),
     })
+    if (patch.store_section) {
+      const item = items.find(i => i.id === id)
+      if (item) {
+        fetch('/api/ingredients/section', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ name: item.name, section: patch.store_section }),
+        })
+      }
+    }
   }
 
   // ── Remove source ─────────────────────────────────────────────────────────
@@ -125,6 +139,35 @@ export default function ShoppingPage() {
     setItems([])
     setSelectedId(null)
     fetch('/api/shopping/clear', { method: 'POST' })
+  }
+
+  // ── Merge ─────────────────────────────────────────────────────────────────
+  function handleLongPress(item: ShoppingListItem) {
+    setSelectedId(null)
+    setMergeSourceId(item.id)
+    setMergeTargetId(null)
+  }
+
+  function handleTileSelect(item: ShoppingListItem) {
+    if (mergeSourceId && item.id !== mergeSourceId) {
+      setMergeTargetId(item.id)
+    } else {
+      setSelectedId(item.id === selectedId ? null : item.id)
+    }
+  }
+
+  function handleMergeConfirm() {
+    if (!mergeSource || !mergeTarget) return
+    const combined = (mergeSource.amount ?? 0) + (mergeTarget.amount ?? 0)
+    handlePatch(mergeSource.id, { amount: combined })
+    handleRemove(mergeTarget)
+    setMergeSourceId(null)
+    setMergeTargetId(null)
+  }
+
+  function handleMergeCancel() {
+    setMergeSourceId(null)
+    setMergeTargetId(null)
   }
 
   // ── Source pills ──────────────────────────────────────────────────────────
@@ -255,8 +298,11 @@ export default function ShoppingPage() {
                         key={item.id}
                         item={item}
                         selected={item.id === selectedId}
-                        onSelect={() => setSelectedId(item.id === selectedId ? null : item.id)}
+                        isMergeSource={item.id === mergeSourceId}
+                        isMergeMode={mergeSourceId !== null}
+                        onSelect={() => handleTileSelect(item)}
                         onRemove={() => handleRemove(item)}
+                        onLongPress={() => handleLongPress(item)}
                       />
                     ))}
                   </div>
@@ -273,8 +319,27 @@ export default function ShoppingPage() {
         className="fixed left-0 right-0 z-30"
         style={{ bottom: 64, background: '#111', borderTop: '1px solid rgba(255,255,255,0.08)' }}
       >
+        {/* Merge mode banner */}
+        {mergeSourceId && !mergeTargetId && (
+          <div
+            className="flex items-center justify-between px-4 py-2"
+            style={{ background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}
+          >
+            <span className="text-[11px] text-amber-400" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+              Tap another item to merge into {mergeSource?.name}
+            </span>
+            <button
+              onClick={handleMergeCancel}
+              className="text-[11px] text-amber-400/60 border border-amber-400/20 rounded-lg px-2.5 py-1"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
         {/* Zone 1: Edit zone */}
-        {selectedItem && (
+        {selectedItem && !mergeSourceId && (
           <EditZone
             item={selectedItem}
             onPatch={patch => handlePatch(selectedItem.id, patch)}
@@ -283,7 +348,7 @@ export default function ShoppingPage() {
         )}
 
         {/* Zone 2: Suggestion tiles */}
-        {suggestions.length > 0 && (
+        {suggestions.length > 0 && !mergeSourceId && (
           <div className="flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none">
             {suggestions.map((s, i) => (
               <button
@@ -310,27 +375,39 @@ export default function ShoppingPage() {
         )}
 
         {/* Zone 3: Search bar */}
-        <div className="px-4 py-3">
-          <form
-            onSubmit={e => {
-              e.preventDefault()
-              if (searchQuery.trim()) handleAddByName(searchQuery.trim())
-            }}
-          >
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search or type an ingredient…"
-              className="w-full rounded-xl px-4 py-3 text-[14px] text-[#f0ede8] outline-none"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                border:     '1px solid rgba(255,255,255,0.1)',
-                fontFamily: 'var(--font-geist-sans)',
+        {!mergeSourceId && (
+          <div className="px-4 py-3">
+            <form
+              onSubmit={e => {
+                e.preventDefault()
+                if (searchQuery.trim()) handleAddByName(searchQuery.trim())
               }}
-            />
-          </form>
-        </div>
+            >
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search or type an ingredient…"
+                className="w-full rounded-xl px-4 py-3 text-[14px] text-[#f0ede8] outline-none"
+                style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  border:     '1px solid rgba(255,255,255,0.1)',
+                  fontFamily: 'var(--font-geist-sans)',
+                }}
+              />
+            </form>
+          </div>
+        )}
       </div>
+
+      {/* Merge confirm sheet */}
+      {mergeSource && mergeTarget && (
+        <MergeConfirmSheet
+          source={mergeSource}
+          target={mergeTarget}
+          onConfirm={handleMergeConfirm}
+          onCancel={handleMergeCancel}
+        />
+      )}
     </div>
   )
 }
@@ -340,30 +417,58 @@ export default function ShoppingPage() {
 function ItemTile({
   item,
   selected,
+  isMergeSource,
+  isMergeMode,
   onSelect,
   onRemove,
+  onLongPress,
 }: {
-  item:     ShoppingListItem
-  selected: boolean
-  onSelect: () => void
-  onRemove: () => void
+  item:          ShoppingListItem
+  selected:      boolean
+  isMergeSource: boolean
+  isMergeMode:   boolean
+  onSelect:      () => void
+  onRemove:      () => void
+  onLongPress:   () => void
 }) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function startLongPress() {
+    timerRef.current = setTimeout(() => { onLongPress() }, 500)
+  }
+
+  function cancelLongPress() {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+  }
+
+  let background = selected ? 'rgba(233,69,96,0.10)' : 'rgba(255,255,255,0.04)'
+  let border     = selected ? '1px solid rgba(233,69,96,0.35)' : '1px solid rgba(255,255,255,0.07)'
+
+  if (isMergeSource) {
+    background = 'rgba(245,158,11,0.12)'
+    border     = '1px solid rgba(245,158,11,0.5)'
+  } else if (isMergeMode) {
+    border = '1px solid rgba(245,158,11,0.2)'
+  }
+
   return (
     <div
       onClick={onSelect}
-      className="relative rounded-xl px-3 pt-3 pb-3 cursor-pointer"
-      style={{
-        background: selected ? 'rgba(233,69,96,0.10)' : 'rgba(255,255,255,0.04)',
-        border:     selected ? '1px solid rgba(233,69,96,0.35)' : '1px solid rgba(255,255,255,0.07)',
-      }}
+      onPointerDown={startLongPress}
+      onPointerUp={cancelLongPress}
+      onPointerLeave={cancelLongPress}
+      className={`relative rounded-xl px-3 pt-3 pb-3 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
+      style={{ background, border }}
     >
-      <button
-        onClick={e => { e.stopPropagation(); onRemove() }}
-        className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white/30"
-        style={{ background: 'rgba(255,255,255,0.08)' }}
-      >
-        ✕
-      </button>
+      {!isMergeMode && (
+        <button
+          onClick={e => { e.stopPropagation(); onRemove() }}
+          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white/30"
+          style={{ background: 'rgba(255,255,255,0.08)' }}
+        >
+          ✕
+        </button>
+      )}
       <div
         className="text-[14px] font-medium text-[#f0ede8] pr-5 leading-snug"
         style={{ fontFamily: 'var(--font-geist-sans)' }}
@@ -399,6 +504,11 @@ function EditZone({
     setAmountInput(item.amount != null ? String(item.amount) : '')
   }, [item.id])
 
+  function commitAmount(raw: string) {
+    const val = parseFloat(raw)
+    if (!isNaN(val)) onPatch({ amount: val })
+  }
+
   return (
     <div
       className="flex items-center gap-2 px-4 py-2.5"
@@ -410,17 +520,37 @@ function EditZone({
       >
         {item.name}
       </span>
+      <button
+        onClick={() => {
+          const next = String(Math.max(0, (item.amount ?? 0) - 1))
+          setAmountInput(next)
+          onPatch({ amount: Math.max(0, (item.amount ?? 0) - 1) })
+        }}
+        className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
+        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+      >
+        −
+      </button>
       <input
         type="number"
+        step="0.5"
         value={amountInput}
         onChange={e => setAmountInput(e.target.value)}
-        onBlur={() => {
-          const val = parseFloat(amountInput)
-          if (!isNaN(val)) onPatch({ amount: val })
-        }}
-        className="w-14 rounded-lg px-2 py-1.5 text-[12px] text-[#f0ede8] text-center outline-none"
+        onBlur={() => commitAmount(amountInput)}
+        className="w-12 rounded-lg px-2 py-1.5 text-[12px] text-[#f0ede8] text-center outline-none"
         style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'var(--font-geist-mono)' }}
       />
+      <button
+        onClick={() => {
+          const next = String((item.amount ?? 0) + 1)
+          setAmountInput(next)
+          onPatch({ amount: (item.amount ?? 0) + 1 })
+        }}
+        className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
+        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+      >
+        +
+      </button>
       <select
         value={item.unit ?? 'stk'}
         onChange={e => onPatch({ unit: e.target.value })}
@@ -445,6 +575,72 @@ function EditZone({
       >
         ✕
       </button>
+    </div>
+  )
+}
+
+// ── MergeConfirmSheet ─────────────────────────────────────────────────────────
+
+function MergeConfirmSheet({
+  source,
+  target,
+  onConfirm,
+  onCancel,
+}: {
+  source:    ShoppingListItem
+  target:    ShoppingListItem
+  onConfirm: () => void
+  onCancel:  () => void
+}) {
+  const combined = (source.amount ?? 0) + (target.amount ?? 0)
+  const unit     = source.unit ?? target.unit ?? ''
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full rounded-t-2xl px-6 pt-6 pb-10"
+        style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <p
+          className="text-[11px] uppercase tracking-[0.08em] text-white/30 mb-4"
+          style={{ fontFamily: 'var(--font-geist-mono)' }}
+        >
+          Merge items
+        </p>
+        <p
+          className="text-[17px] font-semibold text-[#f0ede8] mb-1"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+        >
+          Merge {target.name} into {source.name}?
+        </p>
+        <p
+          className="text-[13px] text-white/40 mb-6"
+          style={{ fontFamily: 'var(--font-geist-mono)' }}
+        >
+          Combined: {combined} {unit} · keeps name &ldquo;{source.name}&rdquo;
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-xl py-3 text-[13px] font-medium text-white/50 border border-white/10"
+            style={{ fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 rounded-xl py-3 text-[13px] font-semibold text-white"
+            style={{ background: 'rgba(245,158,11,0.8)', fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Merge
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

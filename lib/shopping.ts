@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import type { StoreSection } from './store-sections'
 import { getIngredientPreset } from './store-sections'
+import { normaliseIngredientName } from './ingredient-normaliser'
 import type { Recipe, MenuWithRecipes } from '../types/recipe'
 
 export interface ShoppingListItem {
@@ -31,7 +32,10 @@ export async function getShoppingListItems(): Promise<ShoppingListItem[]> {
 export async function addShoppingListItem(item: NewShoppingListItem): Promise<ShoppingListItem> {
   const { data, error } = await supabase
     .from('shopping_list_items')
-    .insert(item)
+    .insert({
+      ...item,
+      name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
+    })
     .select()
     .single()
 
@@ -83,7 +87,7 @@ async function mergeIngredients(
   for (const ing of ingredients) {
     const match = existing.find(
       e =>
-        e.name.toLowerCase() === ing.name.toLowerCase() &&
+        normaliseIngredientName(e.name) === normaliseIngredientName(ing.name) &&
         (e.unit ?? '') === (ing.unit ?? ''),
     )
     if (match) {
