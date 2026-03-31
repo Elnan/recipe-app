@@ -29,26 +29,44 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fetch page HTML
+    // Fetch page HTML — use realistic browser headers to avoid bot detection
     const pageRes = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RecipeBot/1.0)' },
+      headers: {
+        'User-Agent':      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+      },
     })
     if (!pageRes.ok) {
+      const hint = pageRes.status === 402 || pageRes.status === 403
+        ? ' — the site may be blocking automated requests'
+        : ''
       return NextResponse.json(
-        { error: `Failed to fetch URL: ${pageRes.status} ${pageRes.statusText}` },
-        { status: 500 }
+        { error: `Could not fetch that URL (${pageRes.status} ${pageRes.statusText})${hint}` },
+        { status: 422 }
       )
     }
     const html = await pageRes.text()
 
     // schema.org first — AI only as fallback
     const schemaResult = extractSchemaOrg(html)
-    const parsed = schemaResult
-      ?? await parseWithAi({ type: 'url', content: htmlToText(html), sourceIdentifier: url })
+    let parsed
+    if (schemaResult) {
+      parsed = schemaResult
+    } else {
+      try {
+        parsed = await parseWithAi({ type: 'url', content: htmlToText(html), sourceIdentifier: url })
+      } catch (err) {
+        console.error('[import/url] AI fallback error:', err)
+        throw err
+      }
+    }
 
     const recipe = mapToNewRecipe(parsed, url)
     return NextResponse.json({ cached: false, recipe })
   } catch (err) {
+    console.error('[import/url] Unhandled error:', err)
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

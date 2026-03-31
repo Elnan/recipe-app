@@ -126,7 +126,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-28">
+    <div className="min-h-screen bg-[#0a0a0a] pb-40">
 
       {/* ── Hero ── */}
       <div className="relative h-72 overflow-hidden">

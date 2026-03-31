@@ -15,9 +15,10 @@ export interface ShoppingListItem {
   source_recipe_id: string | null
   source_menu_id:   string | null
   is_manual:        boolean
+  quantity:         number
 }
 
-export type NewShoppingListItem = Omit<ShoppingListItem, 'id' | 'created_at'>
+export type NewShoppingListItem = Omit<ShoppingListItem, 'id' | 'created_at' | 'quantity'> & { quantity?: number }
 
 export async function getShoppingListItems(): Promise<ShoppingListItem[]> {
   const { data, error } = await supabase
@@ -45,7 +46,7 @@ export async function addShoppingListItem(item: NewShoppingListItem): Promise<Sh
 
 export async function updateShoppingListItem(
   id: string,
-  patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'notes' | 'store_section'>>,
+  patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'notes' | 'store_section' | 'quantity'>>,
 ): Promise<ShoppingListItem> {
   const { data, error } = await supabase
     .from('shopping_list_items')

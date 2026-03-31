@@ -81,6 +81,7 @@ export default function ShoppingPage() {
     const tempItem: ShoppingListItem = {
       id: tempId, created_at: new Date().toISOString(),
       notes: null, source_recipe_id: null, source_menu_id: null,
+      quantity: 1,
       ...payload,
     }
     setItems(prev => [...prev, tempItem])
@@ -105,7 +106,7 @@ export default function ShoppingPage() {
   // ── Patch ─────────────────────────────────────────────────────────────────
   function handlePatch(
     id: string,
-    patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section'>>,
+    patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section' | 'quantity'>>,
   ) {
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...patch } : i))
     if (id.startsWith('temp-')) return
@@ -480,7 +481,10 @@ function ItemTile({
           className="text-[11px] text-white/35 mt-0.5"
           style={{ fontFamily: 'var(--font-geist-mono)' }}
         >
-          {item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : item.unit}
+          {item.quantity > 1
+            ? `${item.quantity} × ${item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : item.unit}`
+            : item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : item.unit
+          }
         </div>
       )}
     </div>
@@ -495,19 +499,11 @@ function EditZone({
   onRemove,
 }: {
   item:     ShoppingListItem
-  onPatch:  (patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section'>>) => void
+  onPatch:  (patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section' | 'quantity'>>) => void
   onRemove: () => void
 }) {
-  const [amountInput, setAmountInput] = useState(item.amount != null ? String(item.amount) : '')
-
-  useEffect(() => {
-    setAmountInput(item.amount != null ? String(item.amount) : '')
-  }, [item.id])
-
-  function commitAmount(raw: string) {
-    const val = parseFloat(raw)
-    if (!isNaN(val)) onPatch({ amount: val })
-  }
+  const qty        = item.quantity ?? 1
+  const amountText = item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : (item.unit ?? '')
 
   return (
     <div
@@ -520,32 +516,21 @@ function EditZone({
       >
         {item.name}
       </span>
+      <span
+        className="text-[11px] text-white/35 shrink-0"
+        style={{ fontFamily: 'var(--font-geist-mono)' }}
+      >
+        {qty > 1 ? `${qty} × ${amountText}` : amountText}
+      </span>
       <button
-        onClick={() => {
-          const next = String(Math.max(0, (item.amount ?? 0) - 1))
-          setAmountInput(next)
-          onPatch({ amount: Math.max(0, (item.amount ?? 0) - 1) })
-        }}
+        onClick={() => onPatch({ quantity: Math.max(1, qty - 1) })}
         className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
         style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         −
       </button>
-      <input
-        type="number"
-        step="0.5"
-        value={amountInput}
-        onChange={e => setAmountInput(e.target.value)}
-        onBlur={() => commitAmount(amountInput)}
-        className="w-12 rounded-lg px-2 py-1.5 text-[12px] text-[#f0ede8] text-center outline-none"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'var(--font-geist-mono)' }}
-      />
       <button
-        onClick={() => {
-          const next = String((item.amount ?? 0) + 1)
-          setAmountInput(next)
-          onPatch({ amount: (item.amount ?? 0) + 1 })
-        }}
+        onClick={() => onPatch({ quantity: qty + 1 })}
         className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
         style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
