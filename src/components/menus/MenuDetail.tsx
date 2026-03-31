@@ -23,6 +23,25 @@ const PROTEIN_LABEL: Record<ProteinType, string> = {
 export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive }: Props) {
   const [showActiveSheet, setShowActiveSheet] = useState(false)
   const [showDeleteSheet, setShowDeleteSheet] = useState(false)
+  const [addingToList,    setAddingToList]    = useState(false)
+  const [toast,           setToast]           = useState<string | null>(null)
+
+  function showToast(message: string) {
+    setToast(message)
+    setTimeout(() => setToast(null), 2500)
+  }
+
+  async function handleAddToListAndActivate() {
+    setAddingToList(true)
+    try {
+      await fetch(`/api/shopping/menu/${menu.id}`, { method: 'POST' })
+      showToast('Added to shopping list ✓')
+      setShowActiveSheet(false)
+      onSetActive(true)
+    } finally {
+      setAddingToList(false)
+    }
+  }
 
   function handleSetActive(addToShoppingList: boolean) {
     setShowActiveSheet(false)
@@ -108,14 +127,25 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
             Do you want to add the ingredients for this menu to your shopping list?
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-            <button onClick={() => handleSetActive(true)} style={styles.primaryBtn}>
-              Yes, add to list
+            <button
+              onClick={handleAddToListAndActivate}
+              disabled={addingToList}
+              style={{ ...styles.primaryBtn, opacity: addingToList ? 0.6 : 1 }}
+            >
+              {addingToList ? 'Adding…' : 'Yes, add to list'}
             </button>
             <button onClick={() => handleSetActive(false)} style={styles.ghostBtn}>
               No, just set as active
             </button>
           </div>
         </BottomSheet>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '10px 18px', color: '#f0ede8', fontSize: 13, fontFamily: 'var(--font-geist-sans)', zIndex: 100, whiteSpace: 'nowrap', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
+          {toast}
+        </div>
       )}
 
       {/* Delete confirm sheet */}

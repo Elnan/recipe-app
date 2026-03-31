@@ -65,6 +65,19 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
   const [scaledServings,  setScaledServings]  = useState(currentRecipe.servings)
   const [activeTab,       setActiveTab]       = useState<'ingredients' | 'steps'>('ingredients')
   const [expandedStep,    setExpandedStep]    = useState<number | null>(null)
+  const [addingToList,    setAddingToList]    = useState(false)
+  const [shoppingToast,   setShoppingToast]   = useState(false)
+
+  async function handleAddToShoppingList() {
+    setAddingToList(true)
+    try {
+      await fetch(`/api/shopping/recipe/${currentRecipe.id}`, { method: 'POST' })
+      setShoppingToast(true)
+      setTimeout(() => setShoppingToast(false), 2500)
+    } finally {
+      setAddingToList(false)
+    }
+  }
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
 
@@ -514,14 +527,38 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
           background: 'linear-gradient(to top, rgba(10,10,10,1) 60%, rgba(10,10,10,0))',
         }}
       >
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl flex flex-col gap-2">
           <button
             className="w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"
             style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
           >
             Start cooking → {scaledServings} {scaledServings === 1 ? 'serving' : 'servings'}
           </button>
+          <button
+            onClick={handleAddToShoppingList}
+            disabled={addingToList}
+            className="w-full rounded-2xl py-3.5 text-[13px] font-medium tracking-[0.04em] transition-opacity"
+            style={{
+              background:  'rgba(255,255,255,0.06)',
+              border:      '1px solid rgba(255,255,255,0.1)',
+              color:       addingToList ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)',
+              fontFamily:  'var(--font-geist-mono)',
+              opacity:     addingToList ? 0.6 : 1,
+            }}
+          >
+            {addingToList ? 'Adding…' : '+ Add to shopping list'}
+          </button>
         </div>
+
+        {/* Toast */}
+        {shoppingToast && (
+          <div
+            className="fixed left-1/2 -translate-x-1/2 rounded-xl px-5 py-2.5 text-[13px] text-[#f0ede8] z-50 whitespace-nowrap"
+            style={{ bottom: 80, background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)', fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Ingredients added ✓
+          </div>
+        )}
       </div>
     </div>
   )
