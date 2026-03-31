@@ -40,6 +40,13 @@ const METHOD_META: Record<string, { label: string; icon: null }> = {
   'no-cook': { label: 'No cook',  icon: null },
 }
 
+const PROTEIN_LABEL: Record<string, string> = {
+  kjott:    'Kjøtt',
+  kylling:  'Kylling',
+  fisk:     'Fisk',
+  vegetar:  'Vegetar',
+}
+
 const DIETARY_META: Record<string, { label: string; icon: null }> = {
   vegetarian:    { label: 'Vegetarian',  icon: null },
   vegan:         { label: 'Vegan',       icon: null },
@@ -184,7 +191,25 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 
           {/* Bottom content */}
           <div className="relative px-4 pb-4 pt-[14px]">
-            {/* Dietary pills — above title */}
+            {/* Protein + dietary pills — above title */}
+            {(recipe.protein_type || (recipe.dietary && recipe.dietary.length > 0)) && (
+              <div className="flex flex-wrap gap-[5px] mb-[7px]">
+                {recipe.protein_type && PROTEIN_LABEL[recipe.protein_type] && (
+                  <div
+                    className="rounded-[5px] px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
+                    style={{
+                      fontFamily:     'var(--font-geist-mono)',
+                      background:     'rgba(0,0,0,0.55)',
+                      backdropFilter: 'blur(6px)',
+                      borderColor:    'rgba(255,255,255,0.15)',
+                      color:          'rgba(255,255,255,0.75)',
+                    }}
+                  >
+                    {PROTEIN_LABEL[recipe.protein_type]}
+                  </div>
+                )}
+              </div>
+            )}
             {recipe.dietary && recipe.dietary.length > 0 && (
               <div className="flex flex-wrap gap-[5px] mb-[7px]">
                 {recipe.dietary.map(d => (

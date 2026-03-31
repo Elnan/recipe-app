@@ -232,6 +232,25 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
               </span>
             )}
 
+            {/* Protein type */}
+            {currentRecipe.protein_type && (
+              <span
+                style={{
+                  background:    'rgba(255,255,255,0.15)',
+                  border:        '1px solid rgba(255,255,255,0.25)',
+                  color:         '#f0ede8',
+                  borderRadius:  6,
+                  padding:       '3px 8px',
+                  fontFamily:    'var(--font-geist-mono)',
+                  fontSize:      9,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.07em',
+                }}
+              >
+                {{ kjott: 'Kjøtt', kylling: 'Kylling', fisk: 'Fisk', vegetar: 'Vegetar' }[currentRecipe.protein_type] ?? currentRecipe.protein_type}
+              </span>
+            )}
+
             {/* No protein type warning */}
             {!currentRecipe.protein_type && (
               <span

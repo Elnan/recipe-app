@@ -11,6 +11,14 @@ const CATEGORIES: Array<'all' | RecipeCategory> = [
   'all', 'dinner', 'breakfast', 'baking', 'dessert', 'other',
 ]
 
+const PROTEIN_TYPES: Array<{ value: string; label: string }> = [
+  { value: 'all',     label: 'All'     },
+  { value: 'kjott',   label: 'Kjøtt'   },
+  { value: 'kylling', label: 'Kylling' },
+  { value: 'fisk',    label: 'Fisk'    },
+  { value: 'vegetar', label: 'Vegetar' },
+]
+
 const CATEGORY_ACCENT: Record<string, string> = {
   all:       '#f0ede8',
   dinner:    '#e94560',
@@ -29,6 +37,7 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<'all' | RecipeCategory>('all')
+  const [activeProtein,  setActiveProtein]  = useState('all')
   const [filters, setFilters] = useState<RecipeFilters>({})
   const [drawerOpen,        setDrawerOpen]        = useState(false)
   const [importDrawerOpen,  setImportDrawerOpen]  = useState(false)
@@ -53,6 +62,7 @@ export default function RecipesPage() {
   const filtered = useMemo(() => {
     return allRecipes.filter(r => {
       if (activeCategory !== 'all' && r.category !== activeCategory) return false
+      if (activeProtein  !== 'all' && r.protein_type !== activeProtein) return false
 
       if (search) {
         const q = search.toLowerCase()
@@ -74,7 +84,7 @@ export default function RecipesPage() {
 
       return true
     })
-  }, [allRecipes, activeCategory, search, filters])
+  }, [allRecipes, activeCategory, activeProtein, search, filters])
 
   // Active filter pills
   const filterPills: Array<{ label: string; onRemove: () => void }> = []
@@ -172,7 +182,7 @@ export default function RecipesPage() {
               return (
                 <button
                   key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  onClick={() => { setActiveCategory(cat); if (cat !== 'dinner') setActiveProtein('all') }}
                   className="shrink-0 rounded-md px-3 py-1 text-[10px] uppercase tracking-[0.08em] border transition-all"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
@@ -186,6 +196,28 @@ export default function RecipesPage() {
               )
             })}
           </div>
+
+          {/* Protein type tabs */}
+          {activeCategory === 'dinner' && <div className="flex gap-1.5 overflow-x-auto pb-0.5 mt-1.5 scrollbar-none">
+            {PROTEIN_TYPES.map(pt => {
+              const active = activeProtein === pt.value
+              return (
+                <button
+                  key={pt.value}
+                  onClick={() => setActiveProtein(pt.value)}
+                  className="shrink-0 rounded-md px-3 py-1 text-[10px] uppercase tracking-[0.08em] border transition-all"
+                  style={{
+                    fontFamily:  'var(--font-geist-mono)',
+                    background:  active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    borderColor: active ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
+                    color:       active ? 'rgba(255,255,255,0.8)'  : 'rgba(255,255,255,0.3)',
+                  }}
+                >
+                  {pt.label}
+                </button>
+              )
+            })}
+          </div>}
 
           {/* Active filter pills */}
           {filterPills.length > 0 && (

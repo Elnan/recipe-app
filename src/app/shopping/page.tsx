@@ -7,7 +7,7 @@ import {
   STORE_SECTION_ORDER,
   STORE_SECTION_META,
   SHOPPING_UNITS,
-  getIngredientPreset,
+  getIngredientPresetWithDB,
   INGREDIENT_SECTION_MAP,
 } from '../../../lib/store-sections'
 import type { ShoppingListItem } from '../../../lib/shopping'
@@ -69,7 +69,7 @@ export default function ShoppingPage() {
 
   // ── Add from tile / search ────────────────────────────────────────────────
   async function handleAddByName(name: string) {
-    const preset  = getIngredientPreset(name)
+    const preset  = await getIngredientPresetWithDB(name)
     const payload = {
       name,
       amount:        preset.amount,
@@ -184,8 +184,8 @@ export default function ShoppingPage() {
           .filter(k => k.includes(q) && !fromRecent.some(r => r.name.toLowerCase() === k))
           .slice(0, 9 - fromRecent.length)
           .map(k => {
-            const p = getIngredientPreset(k)
-            return { name: k, amount: p.amount as number | null, unit: p.unit as string | null, store_section: p.section }
+            const p = INGREDIENT_SECTION_MAP[k]
+            return { name: k, amount: 1 as number | null, unit: 'stk' as string | null, store_section: (p ?? 'other') as StoreSection }
           })
         return [...fromRecent, ...fromMap].slice(0, 9)
       })()
