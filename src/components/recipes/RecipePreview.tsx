@@ -108,7 +108,7 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
       </div>
 
       {/* Tab content — scrollable */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-4">
         {activeTab === 'ingredients' && (
           <ul className="space-y-1">
             {recipe.ingredients.map((ing, i) => (
@@ -166,7 +166,7 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
       {/* Save button */}
       <button
         onClick={onSave}
-        className="mt-4 w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"
+        className="mt-4 shrink-0 w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"
         style={{ background: '#f4a261', fontFamily: 'var(--font-geist-mono)' }}
       >
         Save recipe →

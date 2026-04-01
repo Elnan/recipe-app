@@ -130,7 +130,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
   const fullRecipe = fullSide === 'saved' ? saved : reimported
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
 
       {/* Header */}
       <div className="mb-4">
@@ -168,7 +168,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
       </div>
 
       {/* Content — scrollable */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-4">
 
         {/* Diff view */}
         {viewMode === 'diff' && (
@@ -270,7 +270,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
       </div>
 
       {/* Action buttons */}
-      <div className="mt-4 flex flex-col gap-2">
+      <div className="mt-4 shrink-0 flex flex-col gap-2">
         <button
           onClick={onUseReimported}
           className="w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"

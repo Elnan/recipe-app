@@ -20,10 +20,50 @@ function normaliseUnit(amount: number, unit: string): { amount: number; unit: st
   return conv ? conv(amount) : { amount, unit }
 }
 
+function autoMatchIngredients(
+  steps: NewRecipe['steps'],
+  ingredients: NewRecipe['ingredients'],
+): NewRecipe['steps'] {
+  return steps.map(step => {
+    if (step.ingredients_used.length > 0) return step
+    const instructionLower = step.instruction.toLowerCase()
+    const matched = ingredients
+      .filter(ing => {
+        const nameLower = ing.name.toLowerCase()
+        return (
+          instructionLower.includes(nameLower) ||
+          instructionLower.includes(nameLower.split(' ')[0])
+        )
+      })
+      .map(ing => ing.name)
+    return { ...step, ingredients_used: matched }
+  })
+}
+
 export function mapToNewRecipe(
   parsed: SchemaOrgResult | AiParseResult,
   sourceUrl?: string
 ): NewRecipe {
+  const ingredients = parsed.ingredients.map(ing => {
+    const normalisedUnit = ing.unit ? normaliseUnit(ing.amount ?? 1, ing.unit) : { amount: ing.amount, unit: ing.unit }
+    const prepNotes = extractPreparationNotes(ing.name)
+    return {
+      ...ing,
+      name:   normaliseIngredientName(ing.name),
+      amount: normalisedUnit.amount ?? ing.amount,
+      unit:   normalisedUnit.unit   ?? ing.unit,
+      notes:  ing.notes ?? prepNotes ?? undefined,
+    }
+  })
+
+  const steps = autoMatchIngredients(
+    parsed.steps.map(step => ({
+      ...step,
+      ingredients_used: step.ingredients_used.map(name => normaliseIngredientName(name)),
+    })),
+    ingredients,
+  )
+
   return {
     title:             parsed.title,
     description:       parsed.description,
@@ -38,18 +78,8 @@ export function mapToNewRecipe(
     protein_type:      (parsed as AiParseResult).protein_type,
     dietary:           parsed.dietary,
     tags:              parsed.tags,
-    ingredients:       parsed.ingredients.map(ing => {
-      const normalisedUnit = ing.unit ? normaliseUnit(ing.amount ?? 1, ing.unit) : { amount: ing.amount, unit: ing.unit }
-      const prepNotes = extractPreparationNotes(ing.name)
-      return {
-        ...ing,
-        name:   normaliseIngredientName(ing.name),
-        amount: normalisedUnit.amount ?? ing.amount,
-        unit:   normalisedUnit.unit   ?? ing.unit,
-        notes:  ing.notes ?? prepNotes ?? undefined,
-      }
-    }),
-    steps:             parsed.steps,
+    ingredients,
+    steps,
     rating:            undefined,
     menu_name:         undefined,
   }

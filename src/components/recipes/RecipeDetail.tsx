@@ -548,6 +548,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
       >
         <div className="mx-auto max-w-2xl flex flex-col gap-2">
           <button
+            onClick={() => router.push(`/recipes/${currentRecipe.id}/cook?servings=${scaledServings}`)}
             className="w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"
             style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
           >
