@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import RecipeCard from '../../components/recipes/RecipeCard'
 import FilterDrawer from '../../components/recipes/FilterDrawer'
 import ImportDrawer from '../../components/recipes/ImportDrawer'
+import BottomNav from '../../components/layout/BottomNav'
 import { getRecipes, type RecipeFilters } from '../../../lib/recipes'
 import type { Recipe, RecipeCategory, NewRecipe } from '../../../types/recipe'
 
@@ -44,6 +45,10 @@ export default function RecipesPage() {
   const [importPrefillText, setImportPrefillText] = useState<string | undefined>()
   const [importDefaultTab,  setImportDefaultTab]  = useState<'url' | 'text' | 'photo' | undefined>()
   const [searchOpen,        setSearchOpen]        = useState(false)
+  const [contentVisible,    setContentVisible]    = useState(false)
+  const inputRef      = useRef<HTMLInputElement>(null)
+  const openTimerRef  = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     getRecipes()
@@ -51,19 +56,20 @@ export default function RecipesPage() {
       .catch(err => console.error('getRecipes error:', err))
       .finally(() => setLoading(false))
 
-    // Open import drawer if ?import=true is in the URL
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('import') === 'true') {
-      setImportDrawerOpen(true)
-      window.history.replaceState({}, '', '/recipes')
-    }
-
     // Web Share Target: open ImportDrawer pre-filled if share text is waiting
     const prefill = sessionStorage.getItem('import:prefill')
     if (prefill) {
       sessionStorage.removeItem('import:prefill')
       setImportPrefillText(prefill)
       setImportDrawerOpen(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('import') === 'true') {
+      setImportDrawerOpen(true)
+      window.history.replaceState({}, '', '/recipes')
     }
   }, [])
 
@@ -133,6 +139,22 @@ export default function RecipesPage() {
     })
   })
 
+  function openSearch() {
+    clearTimeout(closeTimerRef.current)
+    setSearchOpen(true)
+    requestAnimationFrame(() => inputRef.current?.focus())
+    openTimerRef.current = setTimeout(() => setContentVisible(true), 220)
+  }
+
+  function closeSearch() {
+    clearTimeout(openTimerRef.current)
+    setContentVisible(false)
+    closeTimerRef.current = setTimeout(() => {
+      setSearchOpen(false)
+      setSearch('')
+    }, 60)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
 
@@ -159,67 +181,34 @@ export default function RecipesPage() {
             </p>
           </div>
 
-          {/* Search FAB */}
-          <div className="relative mb-3" style={{ height: 40 }}>
-            <div
-              style={{
-                position:     'absolute',
-                left:         0,
-                top:          0,
-                height:       40,
-                width:        searchOpen ? '100%' : 40,
-                borderRadius: searchOpen ? 20 : '50%',
-                background:   searchOpen ? 'rgba(255,255,255,0.95)' : '#5a6b42',
-                border:       searchOpen ? '1.5px solid #5a6b42' : 'none',
-                overflow:     'hidden',
-                display:      'flex',
-                alignItems:   'center',
-                transition:   'width 250ms ease-out, border-radius 250ms ease-out, background 200ms ease-out',
-              }}
-            >
-              {!searchOpen ? (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  aria-label="Open search"
-                  style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <SearchIcon />
-                </button>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingLeft: 12, paddingRight: 4, gap: 6 }}>
-                  <SearchIcon dark />
-                  <input
-                    autoFocus
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Escape') { setSearch(''); setSearchOpen(false) } }}
-                    placeholder="Search recipes…"
-                    style={{
-                      flex:        1,
-                      background:  'transparent',
-                      border:      'none',
-                      outline:     'none',
-                      fontSize:    13,
-                      color:       '#1a1a1a',
-                      fontFamily:  'var(--font-geist-sans)',
-                    }}
-                  />
-                  <button
-                    onClick={() => setDrawerOpen(true)}
-                    aria-label="Open filters"
-                    style={{
-                      display:    'flex',
-                      alignItems: 'center',
-                      padding:    '4px 8px',
-                      borderRadius: 8,
-                      background: filterPills.length > 0 ? 'rgba(90,107,66,0.12)' : 'transparent',
-                    }}
-                  >
-                    <FilterIcon active={filterPills.length > 0} dark />
-                  </button>
-                </div>
-              )}
+          {/* Desktop search bar */}
+          <div className="hidden sm:flex items-center gap-2 mb-4">
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center',
+              gap: 8, background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: 10, padding: '8px 14px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>⌕</span>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search recipes…"
+                style={{ flex: 1, background: 'transparent', border: 'none',
+                  outline: 'none', fontSize: 13,
+                  color: '#f0ede8',
+                  fontFamily: 'var(--font-geist-sans)' }}
+              />
             </div>
+            <button onClick={() => setDrawerOpen(true)}
+              style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10,
+                color: 'rgba(255,255,255,0.5)', display: 'flex',
+                alignItems: 'center', cursor: 'pointer' }}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M2 4h11M4 7.5h7M6 11h3"
+                  stroke="currentColor" strokeWidth="1.5"
+                  strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
 
           {/* Category tabs */}
@@ -309,7 +298,7 @@ export default function RecipesPage() {
                 className="text-[32px] font-bold text-[#f0ede8] tracking-tight"
                 style={{ fontFamily: 'var(--font-geist-sans)' }}
               >
-                Recipes
+                Your cookbook is empty
               </h2>
               <p
                 className="text-[12px] text-white/30"
@@ -340,23 +329,172 @@ export default function RecipesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center pt-20 gap-3">
-              <span className="text-4xl">🍳</span>
+            <div className="flex flex-col items-center pt-20 gap-4">
               <p
-                className="text-[12px] text-white/20"
+                className="text-[12px] text-white/30"
                 style={{ fontFamily: 'var(--font-geist-mono)' }}
               >
-                No recipes found
+                No recipes match your filters
               </p>
+              <button
+                onClick={() => { setFilters({}); setActiveCategory('all'); setActiveProtein('all') }}
+                className="rounded-xl px-4 py-2 text-[11px] border transition-colors hover:border-white/20"
+                style={{
+                  fontFamily:  'var(--font-geist-mono)',
+                  background:  'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  color:       'rgba(255,255,255,0.4)',
+                }}
+              >
+                Clear filters
+              </button>
             </div>
           )
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filtered.map(recipe => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </div>
         )}
+      </div>
+
+      {/* Fixed search FAB — mobile only */}
+      <div className="block sm:hidden">
+      <div
+        style={{
+          position:    'fixed',
+          bottom:      80,
+          right:       14,
+          zIndex:      20,
+          display:     'flex',
+          alignItems:  'center',
+          filter:      'drop-shadow(0 2px 8px rgba(0,0,0,0.18))',
+        }}
+      >
+        {/* Input area — expands leftward */}
+        <div
+          style={{
+            width:        searchOpen ? 240 : 0,
+            height:       48,
+            overflow:     'hidden',
+            borderRadius: '24px 0 0 24px',
+            borderTop:    searchOpen ? '1.5px solid #5a6b42' : 'none',
+            borderBottom: searchOpen ? '1.5px solid #5a6b42' : 'none',
+            borderLeft:   searchOpen ? '1.5px solid #5a6b42' : 'none',
+            borderRight:  'none',
+            background:   '#fff',
+            display:      'flex',
+            alignItems:   'center',
+            transition:   searchOpen
+              ? 'width 0.30s cubic-bezier(0.4,0,0.2,1), border-color 0.20s ease, background 0.20s ease'
+              : 'width 0.18s cubic-bezier(0.4,0,1,1), border-color 0.14s ease, background 0.14s ease',
+          }}
+        >
+          <div
+            style={{
+              display:       'flex',
+              alignItems:    'center',
+              width:         '100%',
+              paddingLeft:   14,
+              paddingRight:  8,
+              gap:           8,
+              opacity:       contentVisible ? 1 : 0,
+              transition:    contentVisible ? 'opacity 0.12s ease' : 'opacity 0.10s ease',
+              pointerEvents: contentVisible ? 'auto' : 'none',
+              whiteSpace:    'nowrap',
+            }}
+          >
+            <span style={{ color: '#5a6b42', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>⌕</span>
+            <input
+              ref={inputRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') closeSearch() }}
+              placeholder="Search recipes…"
+              className="placeholder:text-[rgba(26,26,22,0.35)]"
+              style={{
+                flex:       1,
+                minWidth:   0,
+                background: 'transparent',
+                border:     'none',
+                outline:    'none',
+                fontSize:   14,
+                color:      '#1a1a16',
+                fontFamily: 'var(--font-geist-sans)',
+              }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                style={{
+                  flexShrink: 0,
+                  color:      'rgba(26,26,22,0.4)',
+                  fontSize:   14,
+                  lineHeight: 1,
+                  padding:    4,
+                  background: 'none',
+                  border:     'none',
+                  cursor:     'pointer',
+                }}
+              >
+                ✕
+              </button>
+            )}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open filters"
+              style={{
+                flexShrink:     0,
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                width:          32,
+                height:         32,
+                padding:        0,
+                background:     'none',
+                border:         'none',
+                cursor:         'pointer',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M1 3h10M2.5 6h7M4 9h4"
+                  stroke={filterPills.length > 0 ? '#5a6b42' : 'rgba(90,107,66,0.45)'}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Olive cap */}
+        <button
+          onClick={searchOpen ? closeSearch : openSearch}
+          aria-label={searchOpen ? 'Close search' : 'Open search'}
+          style={{
+            width:          48,
+            height:         48,
+            flexShrink:     0,
+            background:     '#5a6b42',
+            borderRadius:   searchOpen ? '0 24px 24px 0' : 24,
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            color:          'white',
+            fontSize:       20,
+            lineHeight:     1,
+            border:         'none',
+            cursor:         'pointer',
+            transition:     searchOpen
+              ? 'border-radius 0.30s cubic-bezier(0.4,0,0.2,1)'
+              : 'border-radius 0.08s cubic-bezier(0.4,0,1,1) 0.12s',
+          }}
+        >
+          {searchOpen ? '✕' : '⌕'}
+        </button>
+      </div>
       </div>
 
       {/* Filter drawer */}
@@ -366,6 +504,9 @@ export default function RecipesPage() {
         onChange={setFilters}
         onClose={() => setDrawerOpen(false)}
       />
+
+      {/* Page-level BottomNav (z-31) overrides the layout one so Import opens the drawer directly */}
+      <BottomNav onImportClick={() => setImportDrawerOpen(true)} />
 
       {/* Import drawer */}
       <ImportDrawer
@@ -400,23 +541,3 @@ export default function RecipesPage() {
   )
 }
 
-function SearchIcon({ dark = false }: { dark?: boolean }) {
-  const c = dark ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.9)'
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="7" cy="7" r="4.5" stroke={c} strokeWidth="1.5" />
-      <path d="M10.5 10.5L13 13" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function FilterIcon({ active, dark = false }: { active: boolean; dark?: boolean }) {
-  const c = dark
-    ? (active ? '#5a6b42' : 'rgba(0,0,0,0.25)')
-    : (active ? '#f4a261' : 'rgba(255,255,255,0.3)')
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-      <path d="M2 4h11M4 7.5h7M6 11h3" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}

@@ -10,7 +10,7 @@ const TABS = [
   { href: '/recipes?import=true', label: 'Import', icon: ImportIcon },
 ]
 
-export default function BottomNav() {
+export default function BottomNav({ onImportClick }: { onImportClick?: () => void } = {}) {
   const pathname = usePathname()
 
   return (
@@ -20,7 +20,7 @@ export default function BottomNav() {
         bottom:          0,
         left:            0,
         right:           0,
-        zIndex:          30,
+        zIndex:          onImportClick ? 31 : 30,
         background:      'rgba(10,10,10,0.92)',
         backdropFilter:  'blur(16px)',
         borderTop:       '1px solid rgba(255,255,255,0.06)',
@@ -29,8 +29,44 @@ export default function BottomNav() {
       }}
     >
       {TABS.map(({ href, label, icon: Icon }) => {
-        // Import tab is a transient action — never mark as active
-        const active = href.includes('?') ? false : pathname.startsWith(href)
+        const isImport = href.includes('?')
+        const active = isImport ? false : pathname.startsWith(href)
+
+        if (isImport && onImportClick) {
+          return (
+            <button
+              key={href}
+              onClick={onImportClick}
+              style={{
+                flex:           1,
+                display:        'flex',
+                flexDirection:  'column',
+                alignItems:     'center',
+                justifyContent: 'center',
+                gap:            4,
+                padding:        '10px 0 12px',
+                background:     'none',
+                border:         'none',
+                cursor:         'pointer',
+                color:          'rgba(255,255,255,0.3)',
+                transition:     'color 150ms ease',
+              }}
+            >
+              <Icon active={false} />
+              <span
+                style={{
+                  fontSize:      10,
+                  fontFamily:    'var(--font-geist-mono)',
+                  letterSpacing: '0.05em',
+                  lineHeight:    1,
+                }}
+              >
+                {label}
+              </span>
+            </button>
+          )
+        }
+
         return (
           <Link
             key={href}
