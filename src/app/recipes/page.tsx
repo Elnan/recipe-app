@@ -42,12 +42,21 @@ export default function RecipesPage() {
   const [drawerOpen,        setDrawerOpen]        = useState(false)
   const [importDrawerOpen,  setImportDrawerOpen]  = useState(false)
   const [importPrefillText, setImportPrefillText] = useState<string | undefined>()
+  const [importDefaultTab,  setImportDefaultTab]  = useState<'url' | 'text' | 'photo' | undefined>()
+  const [searchOpen,        setSearchOpen]        = useState(false)
 
   useEffect(() => {
     getRecipes()
       .then(setAllRecipes)
       .catch(err => console.error('getRecipes error:', err))
       .finally(() => setLoading(false))
+
+    // Open import drawer if ?import=true is in the URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('import') === 'true') {
+      setImportDrawerOpen(true)
+      window.history.replaceState({}, '', '/recipes')
+    }
 
     // Web Share Target: open ImportDrawer pre-filled if share text is waiting
     const prefill = sessionStorage.getItem('import:prefill')
@@ -73,6 +82,7 @@ export default function RecipesPage() {
       }
 
       if (filters.cooking_method && r.cooking_method !== filters.cooking_method) return false
+      if (filters.cuisine && r.cuisine?.toLowerCase() !== filters.cuisine.toLowerCase()) return false
       if (filters.min_rating != null && (r.rating ?? 0) < filters.min_rating) return false
       if (filters.max_time_minutes != null) {
         const total = (r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)
@@ -92,6 +102,12 @@ export default function RecipesPage() {
     filterPills.push({
       label: filters.cooking_method,
       onRemove: () => setFilters(f => ({ ...f, cooking_method: undefined })),
+    })
+  }
+  if (filters.cuisine) {
+    filterPills.push({
+      label: filters.cuisine,
+      onRemove: () => setFilters(f => ({ ...f, cuisine: undefined })),
     })
   }
   if (filters.max_time_minutes != null) {
@@ -128,50 +144,82 @@ export default function RecipesPage() {
         <div className="mx-auto max-w-6xl">
 
           {/* Title row */}
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1
-                className="text-[28px] font-bold leading-none text-[#f0ede8] tracking-tight"
-                style={{ fontFamily: 'var(--font-geist-sans)' }}
-              >
-                Recipes
-              </h1>
-              <p
-                className="mt-1 text-[10px] text-white/20"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
-              >
-                {loading ? '…' : `${filtered.length} of ${allRecipes.length}`}
-              </p>
-            </div>
-            <button
-              onClick={() => setImportDrawerOpen(true)}
-              className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-80"
-              style={{ background: '#f4a261', fontFamily: 'var(--font-geist-mono)' }}
+          <div className="mb-4">
+            <h1
+              className="text-[28px] font-bold leading-none text-[#f0ede8] tracking-tight"
+              style={{ fontFamily: 'var(--font-geist-sans)' }}
             >
-              + Add
-            </button>
+              Recipes
+            </h1>
+            <p
+              className="mt-1 text-[10px] text-white/20"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              {loading ? '…' : `${filtered.length} of ${allRecipes.length}`}
+            </p>
           </div>
 
-          {/* Search + filter icon */}
-          <div className="relative mb-3">
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search recipes…"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-2.5 pr-11 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
-            />
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+          {/* Search FAB */}
+          <div className="relative mb-3" style={{ height: 40 }}>
+            <div
               style={{
-                background: filterPills.length > 0 ? 'rgba(244,162,97,0.15)' : 'transparent',
-                color: filterPills.length > 0 ? '#f4a261' : 'rgba(255,255,255,0.3)',
+                position:     'absolute',
+                left:         0,
+                top:          0,
+                height:       40,
+                width:        searchOpen ? '100%' : 40,
+                borderRadius: searchOpen ? 20 : '50%',
+                background:   searchOpen ? 'rgba(255,255,255,0.95)' : '#5a6b42',
+                border:       searchOpen ? '1.5px solid #5a6b42' : 'none',
+                overflow:     'hidden',
+                display:      'flex',
+                alignItems:   'center',
+                transition:   'width 250ms ease-out, border-radius 250ms ease-out, background 200ms ease-out',
               }}
-              aria-label="Open filters"
             >
-              <FilterIcon active={filterPills.length > 0} />
-            </button>
+              {!searchOpen ? (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Open search"
+                  style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <SearchIcon />
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingLeft: 12, paddingRight: 4, gap: 6 }}>
+                  <SearchIcon dark />
+                  <input
+                    autoFocus
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Escape') { setSearch(''); setSearchOpen(false) } }}
+                    placeholder="Search recipes…"
+                    style={{
+                      flex:        1,
+                      background:  'transparent',
+                      border:      'none',
+                      outline:     'none',
+                      fontSize:    13,
+                      color:       '#1a1a1a',
+                      fontFamily:  'var(--font-geist-sans)',
+                    }}
+                  />
+                  <button
+                    onClick={() => setDrawerOpen(true)}
+                    aria-label="Open filters"
+                    style={{
+                      display:    'flex',
+                      alignItems: 'center',
+                      padding:    '4px 8px',
+                      borderRadius: 8,
+                      background: filterPills.length > 0 ? 'rgba(90,107,66,0.12)' : 'transparent',
+                    }}
+                  >
+                    <FilterIcon active={filterPills.length > 0} dark />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Category tabs */}
@@ -255,17 +303,55 @@ export default function RecipesPage() {
             </span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center pt-20 gap-3">
-            <span className="text-4xl">🍳</span>
-            <p
-              className="text-[12px] text-white/20"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
-            >
-              No recipes found
-            </p>
-          </div>
+          allRecipes.length === 0 ? (
+            <div className="flex flex-col items-center pt-20 gap-6">
+              <h2
+                className="text-[32px] font-bold text-[#f0ede8] tracking-tight"
+                style={{ fontFamily: 'var(--font-geist-sans)' }}
+              >
+                Recipes
+              </h2>
+              <p
+                className="text-[12px] text-white/30"
+                style={{ fontFamily: 'var(--font-geist-mono)' }}
+              >
+                Add your first recipe
+              </p>
+              <div className="flex gap-3">
+                {([
+                  { tab: 'url'   as const, label: '🔗 URL'   },
+                  { tab: 'text'  as const, label: '📋 Paste'  },
+                  { tab: 'photo' as const, label: '📷 Photo'  },
+                ]).map(({ tab, label }) => (
+                  <button
+                    key={tab}
+                    onClick={() => { setImportDefaultTab(tab); setImportDrawerOpen(true) }}
+                    className="rounded-xl px-4 py-2.5 text-[12px] border transition-colors hover:border-white/20"
+                    style={{
+                      fontFamily:  'var(--font-geist-mono)',
+                      background:  'rgba(255,255,255,0.04)',
+                      borderColor: 'rgba(255,255,255,0.08)',
+                      color:       'rgba(255,255,255,0.5)',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center pt-20 gap-3">
+              <span className="text-4xl">🍳</span>
+              <p
+                className="text-[12px] text-white/20"
+                style={{ fontFamily: 'var(--font-geist-mono)' }}
+              >
+                No recipes found
+              </p>
+            </div>
+          )
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4">
             {filtered.map(recipe => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
@@ -286,6 +372,7 @@ export default function RecipesPage() {
         open={importDrawerOpen}
         onClose={() => setImportDrawerOpen(false)}
         prefillText={importPrefillText}
+        defaultTab={importDefaultTab}
         onSave={async (recipe: NewRecipe) => {
           const res  = await fetch('/api/recipes', {
             method:  'POST',
@@ -313,21 +400,23 @@ export default function RecipesPage() {
   )
 }
 
-function FilterIcon({ active }: { active: boolean }) {
+function SearchIcon({ dark = false }: { dark?: boolean }) {
+  const c = dark ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.9)'
   return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 15 15"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M2 4h11M4 7.5h7M6 11h3"
-        stroke={active ? '#f4a261' : 'rgba(255,255,255,0.3)'}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="7" cy="7" r="4.5" stroke={c} strokeWidth="1.5" />
+      <path d="M10.5 10.5L13 13" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function FilterIcon({ active, dark = false }: { active: boolean; dark?: boolean }) {
+  const c = dark
+    ? (active ? '#5a6b42' : 'rgba(0,0,0,0.25)')
+    : (active ? '#f4a261' : 'rgba(255,255,255,0.3)')
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M2 4h11M4 7.5h7M6 11h3" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }

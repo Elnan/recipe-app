@@ -4,6 +4,7 @@ import type { Recipe, RecipeCategory, NewRecipe } from '../types/recipe'
 export interface RecipeFilters {
   category?: RecipeCategory
   cooking_method?: string
+  cuisine?: string
   dietary?: string[]
   min_rating?: number
   max_time_minutes?: number

@@ -13,6 +13,12 @@ const METHOD_META: Record<string, { label: string; icon: null }> = {
   'no-cook': { label: 'No cook',  icon: null },
 }
 
+const CUISINES: string[] = [
+  'Italian', 'Mexican', 'Asian', 'Indian', 'Japanese',
+  'Thai', 'Mediterranean', 'American', 'French', 'Greek',
+  'Middle Eastern', 'Chinese', 'Korean', 'Spanish',
+]
+
 const DIETARY_META: Record<string, { label: string; icon: null }> = {
   vegetarian:    { label: 'Vegetarian',  icon: null },
   vegan:         { label: 'Vegan',       icon: null },
@@ -51,6 +57,13 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
     })
   }
 
+  function setCuisine(value: string) {
+    onChange({
+      ...filters,
+      cuisine: filters.cuisine === value ? undefined : value,
+    })
+  }
+
   function setMaxTime(value: number) {
     onChange({
       ...filters,
@@ -71,6 +84,7 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
 
   const hasFilters =
     filters.cooking_method != null ||
+    filters.cuisine != null ||
     filters.max_time_minutes != null ||
     filters.min_rating != null ||
     (filters.dietary && filters.dietary.length > 0)
@@ -126,6 +140,20 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
                   label={label}
                   active={filters.cooking_method === value}
                   onClick={() => setCookingMethod(value)}
+                />
+              ))}
+            </div>
+          </Section>
+
+          {/* Cuisine */}
+          <Section label="Cuisine">
+            <div className="flex flex-wrap gap-2">
+              {CUISINES.map(value => (
+                <Chip
+                  key={value}
+                  label={value}
+                  active={filters.cuisine === value}
+                  onClick={() => setCuisine(value)}
                 />
               ))}
             </div>

@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TABS = [
-  { href: '/recipes',  label: 'Recipes',  icon: RecipesIcon },
-  { href: '/menus',    label: 'Menus',    icon: MenusIcon },
-  { href: '/shopping', label: 'Shopping', icon: ShoppingIcon },
-  { href: '/cooking',  label: 'Cooking',  icon: CookingIcon },
+  { href: '/recipes',          label: 'Recipes',  icon: RecipesIcon },
+  { href: '/menus',            label: 'Menus',    icon: MenusIcon },
+  { href: '/shopping',         label: 'Shopping', icon: ShoppingIcon },
+  { href: '/recipes?import=true', label: 'Import', icon: ImportIcon },
 ]
 
 export default function BottomNav() {
@@ -29,7 +29,8 @@ export default function BottomNav() {
       }}
     >
       {TABS.map(({ href, label, icon: Icon }) => {
-        const active = pathname.startsWith(href)
+        // Import tab is a transient action — never mark as active
+        const active = href.includes('?') ? false : pathname.startsWith(href)
         return (
           <Link
             key={href}
@@ -101,13 +102,10 @@ function ShoppingIcon({ active }: { active: boolean }) {
   )
 }
 
-function CookingIcon({ active }: { active: boolean }) {
-  const c = active ? '#e94560' : 'rgba(255,255,255,0.3)'
+function ImportIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M5 10h12v5a4 4 0 01-4 4H9a4 4 0 01-4-4v-5z" stroke={c} strokeWidth="1.5" />
-      <path d="M3 10h16" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M15 10V7a2 2 0 00-4 0" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <span style={{ fontSize: 22, fontWeight: 300, lineHeight: 1, color: 'rgba(255,255,255,0.3)' }}>
+      +
+    </span>
   )
 }

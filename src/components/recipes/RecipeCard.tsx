@@ -173,43 +173,59 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
             )}
           </div>
 
-          {/* Menu name badge — top right */}
-          {recipe.menu_name && (
-            <div
-              className="absolute top-3 right-3 rounded-[5px] px-[9px] py-[3px] text-[9px] tracking-[0.06em] border"
-              style={{
-                fontFamily: 'var(--font-geist-mono)',
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'blur(6px)',
-                borderColor: `${accent}55`,
-                color: accent,
-              }}
-            >
-              {recipe.menu_name}
-            </div>
-          )}
+          {/* Top-right: rating + menu name (stacked) */}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-[5px]">
+            {recipe.rating != null && (
+              <div
+                className="rounded-[5px] px-[9px] py-[3px] border flex items-center gap-px"
+                style={{
+                  background: 'rgba(0,0,0,0.55)',
+                  backdropFilter: 'blur(6px)',
+                  borderColor: 'rgba(255,255,255,0.15)',
+                }}
+              >
+                <StarRating rating={recipe.rating} />
+              </div>
+            )}
+            {recipe.menu_name && (
+              <div
+                className="rounded-[5px] px-[9px] py-[3px] text-[9px] tracking-[0.06em] border"
+                style={{
+                  fontFamily: 'var(--font-geist-mono)',
+                  background: 'rgba(0,0,0,0.55)',
+                  backdropFilter: 'blur(6px)',
+                  borderColor: `${accent}55`,
+                  color: accent,
+                }}
+              >
+                {recipe.menu_name}
+              </div>
+            )}
+          </div>
 
           {/* Bottom content */}
           <div className="relative px-4 pb-4 pt-[14px]">
-            {/* Protein + dietary pills — above title */}
-            {(recipe.protein_type || (recipe.dietary && recipe.dietary.length > 0)) && (
+            {/* Protein + time combined pill — above title */}
+            {(recipe.protein_type || totalTime > 0) && (
               <div className="flex flex-wrap gap-[5px] mb-[7px]">
-                {recipe.protein_type && PROTEIN_LABEL[recipe.protein_type] && (
-                  <div
-                    className="rounded-[5px] px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
-                    style={{
-                      fontFamily:     'var(--font-geist-mono)',
-                      background:     'rgba(0,0,0,0.55)',
-                      backdropFilter: 'blur(6px)',
-                      borderColor:    'rgba(255,255,255,0.15)',
-                      color:          'rgba(255,255,255,0.75)',
-                    }}
-                  >
-                    {PROTEIN_LABEL[recipe.protein_type]}
-                  </div>
-                )}
+                <div
+                  className="rounded-[5px] px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
+                  style={{
+                    fontFamily:     'var(--font-geist-mono)',
+                    background:     'rgba(0,0,0,0.55)',
+                    backdropFilter: 'blur(6px)',
+                    borderColor:    'rgba(255,255,255,0.15)',
+                    color:          'rgba(255,255,255,0.75)',
+                  }}
+                >
+                  {[
+                    recipe.protein_type ? PROTEIN_LABEL[recipe.protein_type] : null,
+                    totalTime > 0 ? `${totalTime}m` : null,
+                  ].filter(Boolean).join(' · ')}
+                </div>
               </div>
             )}
+            {/* Dietary pills */}
             {recipe.dietary && recipe.dietary.length > 0 && (
               <div className="flex flex-wrap gap-[5px] mb-[7px]">
                 {recipe.dietary.map(d => (
@@ -229,38 +245,15 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
                 ))}
               </div>
             )}
-            <div className="flex items-start justify-between mb-[5px]">
-              <h3
-                className="flex-1 pr-2 text-[18px] font-bold leading-tight text-white"
-                style={{
-                  fontFamily: 'var(--font-geist-sans)',
-                  textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                }}
-              >
-                {recipe.title}
-              </h3>
-              {recipe.rating != null && <StarRating rating={recipe.rating} />}
-            </div>
-
-            {/* Meta row: time, cuisine */}
-            <div className="flex items-center gap-3 flex-wrap">
-              {totalTime > 0 && (
-                <span
-                  className="text-[11px] text-white/35"
-                  style={{ fontFamily: 'var(--font-geist-mono)' }}
-                >
-                  ⏱ {totalTime}m
-                </span>
-              )}
-              {recipe.cuisine && (
-                <span
-                  className="text-[11px] text-white/35"
-                  style={{ fontFamily: 'var(--font-geist-mono)' }}
-                >
-                  {recipe.cuisine}
-                </span>
-              )}
-            </div>
+            <h3
+              className="text-[18px] font-bold leading-tight text-white"
+              style={{
+                fontFamily: 'var(--font-geist-sans)',
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              }}
+            >
+              {recipe.title}
+            </h3>
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ interface ImportDrawerProps {
   onSave:        (recipe: NewRecipe) => Promise<void>
   onUpdate?:     (id: string, recipe: NewRecipe) => Promise<void>
   prefillText?:  string
+  defaultTab?:   Tab
 }
 
 type Tab          = 'url' | 'text' | 'photo'
@@ -292,7 +293,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
 
 // ── ImportDrawer ──────────────────────────────────────────────────────────────
 
-export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillText }: ImportDrawerProps) {
+export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillText, defaultTab }: ImportDrawerProps) {
   const [tab,           setTab]           = useState<Tab>('url')
   const [drawerState,   setDrawerState]   = useState<DrawerState>('input')
   const [urlInput,      setUrlInput]      = useState('')
@@ -302,6 +303,13 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
   const [cachedRecipe,  setCachedRecipe]  = useState<Recipe | null>(null)
   const [dragOver,      setDragOver]      = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync defaultTab when drawer opens
+  useEffect(() => {
+    if (open && defaultTab) {
+      setTab(defaultTab)
+    }
+  }, [open, defaultTab])
 
   // Sync prefillText → text tab
   useEffect(() => {
