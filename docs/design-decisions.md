@@ -57,3 +57,14 @@
 - Filter drawer: cooking method, time presets, rating, 
   cuisine pills, dietary — no servings
 - Empty state: page title + 3 action buttons (URL, paste, photo)
+
+## Screen 2 — Recipe Detail — final decisions:
+
+- Hero: Back (left) + Edit (right) top only. Bottom of hero: category badge (olive, left) + rating (glass, right), then title in Georgia below
+- Description: Directly below hero, before any meta
+- Method | Protein: One row, two columns, label left + value right, centered short divider
+- Total time | Servings: One row, two columns, centered Georgia numerals, same divider style
+- Tabs: Ingredients / Steps, pill switcher style
+- Ingredients: Name left, scaled amount+unit right, divider lines between
+- Steps: Olive numbered circles, instruction text, ingredient pills below each step
+- Footer: Start cooking primary (olive), "Add to shopping list" small underlined text link

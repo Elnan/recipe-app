@@ -26,7 +26,15 @@ const CATEGORY_EMOJI: Record<RecipeCategory, string> = {
   dinner: '🍽️', breakfast: '☀️', baking: '🍞', dessert: '🍮', other: '🥄',
 }
 
-// TODO: icon toggle — swap label for icon when icons are added and display preference is set
+const PROTEIN_LABEL: Record<string, string> = {
+  kjott: 'Kjøtt', kylling: 'Kylling', fisk: 'Fisk', vegetar: 'Vegetar',
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  pan: 'Pan', oven: 'Oven', pot: 'Pot', 'one-pan': 'One pan',
+  grill: 'Grill', wok: 'Wok', 'no-cook': 'No cook',
+}
+
 const DIETARY_META: Record<string, { label: string; icon: null }> = {
   vegetarian:    { label: 'Vegetarian',  icon: null },
   vegan:         { label: 'Vegan',       icon: null },
@@ -35,7 +43,15 @@ const DIETARY_META: Record<string, { label: string; icon: null }> = {
   'nut-free':    { label: 'Nut free',    icon: null },
 }
 
-// Format a scaled amount into a readable string with unicode fractions
+function formatTime(mins: number): string {
+  if (mins >= 60) {
+    const h = Math.floor(mins / 60)
+    const m = mins % 60
+    return m > 0 ? `${h}t ${m}m` : `${h}t`
+  }
+  return `${mins}m`
+}
+
 function formatAmount(n: number): string {
   if (n === 0) return '0'
   const whole = Math.floor(n)
@@ -67,6 +83,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
   const [expandedStep,    setExpandedStep]    = useState<number | null>(null)
   const [addingToList,    setAddingToList]    = useState(false)
   const [shoppingToast,   setShoppingToast]   = useState(false)
+  const [descExpanded,    setDescExpanded]    = useState(false)
 
   async function handleAddToShoppingList() {
     setAddingToList(true)
@@ -188,93 +205,38 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
           Edit
         </button>
 
-        {/* Hero badges + title */}
+        {/* Category + rating row, then title */}
         <div className="absolute bottom-5 left-5 right-5">
-          <div className="flex items-center gap-[5px] mb-3 flex-wrap">
-            {/* Category */}
+          <div className="flex items-center justify-between mb-2">
             <span
               className="rounded-[5px] px-[9px] py-[3px] text-[9px] font-medium uppercase tracking-[0.09em] text-[#0a0a0a]"
               style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
             >
               {CATEGORY_EMOJI[currentRecipe.category]} {currentRecipe.category}
             </span>
-
-            {/* Cooking method */}
-            {currentRecipe.cooking_method && (
-              <span
-                className="rounded-[5px] border px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em]"
-                style={{
-                  fontFamily:     'var(--font-geist-mono)',
-                  background:     'rgba(0,0,0,0.55)',
-                  backdropFilter: 'blur(6px)',
-                  borderColor:    `${accent}55`,
-                  color:          accent,
-                }}
-              >
-                {currentRecipe.cooking_method}
-              </span>
-            )}
-
-            {/* Rating */}
             {currentRecipe.rating != null && (
-              <span
-                className="rounded-[5px] border px-[9px] py-[3px] text-[10px]"
-                style={{
-                  background:     'rgba(0,0,0,0.55)',
-                  backdropFilter: 'blur(6px)',
-                  borderColor:    'rgba(255,255,255,0.08)',
-                }}
-              >
-                {'★'.repeat(currentRecipe.rating)}
-                <span style={{ color: 'rgba(255,255,255,0.15)' }}>
-                  {'★'.repeat(5 - currentRecipe.rating)}
-                </span>
-              </span>
-            )}
-
-            {/* Protein type */}
-            {currentRecipe.protein_type && (
-              <span
-                style={{
-                  background:    'rgba(255,255,255,0.15)',
-                  border:        '1px solid rgba(255,255,255,0.25)',
-                  color:         '#f0ede8',
-                  borderRadius:  6,
-                  padding:       '3px 8px',
-                  fontFamily:    'var(--font-geist-mono)',
-                  fontSize:      9,
-                  textTransform: 'uppercase' as const,
-                  letterSpacing: '0.07em',
-                }}
-              >
-                {{ kjott: 'Kjøtt', kylling: 'Kylling', fisk: 'Fisk', vegetar: 'Vegetar' }[currentRecipe.protein_type] ?? currentRecipe.protein_type}
-              </span>
-            )}
-
-            {/* No protein type warning */}
-            {!currentRecipe.protein_type && (
-              <span
-                style={{
-                  background:    'rgba(255,180,0,0.15)',
-                  border:        '1px solid rgba(255,180,0,0.3)',
-                  color:         'rgba(255,180,0,0.8)',
-                  borderRadius:  6,
-                  padding:       '3px 8px',
-                  fontFamily:    'var(--font-geist-mono)',
-                  fontSize:      9,
-                  textTransform: 'uppercase' as const,
-                  letterSpacing: '0.07em',
-                }}
-              >
-                No protein type
-              </span>
+              <div style={{
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 6,
+                padding: '3px 6px',
+                display: 'flex',
+                gap: 1,
+              }}>
+                {[1,2,3,4,5].map(i => (
+                  <span key={i} style={{
+                    fontSize: 10,
+                    color: i <= currentRecipe.rating! ? '#f0b429' : 'rgba(255,255,255,0.2)',
+                  }}>★</span>
+                ))}
+              </div>
             )}
           </div>
-
           <h1
             className="text-[26px] font-bold leading-tight text-white"
             style={{
-              fontFamily: 'var(--font-geist-sans)',
+              fontFamily: 'Georgia, serif',
               textShadow: '0 2px 8px rgba(0,0,0,0.6)',
             }}
           >
@@ -286,7 +248,44 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
       {/* ── Body ── */}
       <div className="mx-auto max-w-2xl px-5">
 
-        {/* Dietary pills — below title */}
+        {/* Description — first element below hero */}
+        {currentRecipe.description && (
+          <div className="mt-5">
+            <p
+              className="text-[14px] leading-relaxed text-white/40"
+              style={{
+                fontFamily: 'var(--font-geist-sans)',
+                display: '-webkit-box',
+                WebkitLineClamp: descExpanded ? undefined : 3,
+                WebkitBoxOrient: 'vertical' as const,
+                overflow: descExpanded ? 'visible' : 'hidden',
+              }}
+            >
+              {currentRecipe.description}
+            </p>
+            {currentRecipe.description.length > 250 && (
+              <button
+                onClick={() => setDescExpanded(e => !e)}
+                style={{
+                  fontFamily: 'var(--font-geist-mono)',
+                  fontSize: 10,
+                  color: accent,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.06em',
+                  marginTop: 4,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                {descExpanded ? 'Read less ↑' : 'Read more ↓'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Dietary pills */}
         {currentRecipe.dietary && currentRecipe.dietary.length > 0 && (
           <div className="flex flex-wrap gap-[5px] mt-4">
             {currentRecipe.dietary.map(d => (
@@ -294,12 +293,12 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
                 key={d}
                 className="uppercase tracking-[0.07em] border"
                 style={{
-                  fontFamily: 'var(--font-geist-mono)',
-                  fontSize: '11px',
-                  padding: '3px 10px',
-                  background: 'transparent',
+                  fontFamily:  'var(--font-geist-mono)',
+                  fontSize:    '11px',
+                  padding:     '3px 10px',
+                  background:  'transparent',
                   borderColor: 'rgba(255,255,255,0.18)',
-                  color: 'rgba(255,255,255,0.45)',
+                  color:       'rgba(255,255,255,0.45)',
                   borderRadius: '20px',
                 }}
               >
@@ -309,67 +308,108 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
           </div>
         )}
 
-        {/* Description */}
-        {currentRecipe.description && (
-          <p
-            className="mt-5 text-[14px] leading-relaxed text-white/40"
-            style={{ fontFamily: 'var(--font-geist-sans)' }}
+        {/* Method | Protein row */}
+        {(currentRecipe.cooking_method || currentRecipe.protein_type) && (
+          <div
+            className="mt-5"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              borderTop: '1px solid rgba(255,255,255,0.07)',
+              borderBottom: '1px solid rgba(255,255,255,0.07)',
+            }}
           >
-            {currentRecipe.description}
-          </p>
-        )}
-
-        {/* Meta pills */}
-        {(totalTime > 0 || currentRecipe.cuisine) && (
-          <div className="mt-4 flex gap-2 flex-wrap">
-            {currentRecipe.prep_time_minutes != null && (
-              <MetaPill label="Prep" value={`${currentRecipe.prep_time_minutes}m`} />
+            {currentRecipe.cooking_method && (
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', padding: '9px 20px' }}>
+                <span
+                  className="text-[10px] uppercase tracking-[0.08em] text-white/30"
+                  style={{ fontFamily: 'var(--font-geist-mono)' }}
+                >
+                  Method
+                </span>
+                <span
+                  className="text-[13px] text-[#f0ede8]"
+                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                >
+                  {METHOD_LABEL[currentRecipe.cooking_method] ?? currentRecipe.cooking_method}
+                </span>
+              </div>
             )}
-            {currentRecipe.cook_time_minutes != null && (
-              <MetaPill label="Cook" value={`${currentRecipe.cook_time_minutes}m`} />
+            {currentRecipe.cooking_method && currentRecipe.protein_type && (
+              <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.09)' }} />
             )}
-            {totalTime > 0 && (
-              <MetaPill label="Total" value={`${totalTime}m`} />
-            )}
-            {currentRecipe.cuisine && (
-              <MetaPill label="Cuisine" value={currentRecipe.cuisine} />
+            {currentRecipe.protein_type && (
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', padding: '9px 20px' }}>
+                <span
+                  className="text-[10px] uppercase tracking-[0.08em] text-white/30"
+                  style={{ fontFamily: 'var(--font-geist-mono)' }}
+                >
+                  Protein
+                </span>
+                <span
+                  className="text-[13px]"
+                  style={{ fontFamily: 'var(--font-geist-sans)', color: accent }}
+                >
+                  {PROTEIN_LABEL[currentRecipe.protein_type] ?? currentRecipe.protein_type}
+                </span>
+              </div>
             )}
           </div>
         )}
 
-        {/* ── Servings adjuster ── */}
+        {/* Total time | Servings row */}
         <div
-          className="mt-6 flex items-center justify-between rounded-2xl border border-white/[0.07] px-5 py-4"
+          className="mt-3 flex items-center rounded-2xl border border-white/[0.07]"
           style={{ background: 'rgba(255,255,255,0.03)' }}
         >
-          <span
-            className="text-[12px] uppercase tracking-[0.08em] text-white/30"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
-          >
-            Servings
-          </span>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => adjustServings(-1)}
-              disabled={scaledServings <= 1}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/50 transition-colors hover:border-white/20 hover:text-white disabled:opacity-20"
-              aria-label="Decrease servings"
-            >
-              −
-            </button>
+          {totalTime > 0 && (
+            <div className="flex-1 flex flex-col items-center py-4">
+              <span
+                className="text-[10px] uppercase tracking-[0.08em] text-white/30 mb-1"
+                style={{ fontFamily: 'var(--font-geist-mono)' }}
+              >
+                Total time
+              </span>
+              <span className="text-[22px] text-[#f0ede8]" style={{ fontFamily: 'Georgia, serif' }}>
+                {formatTime(totalTime)}
+              </span>
+            </div>
+          )}
+          {totalTime > 0 && (
+            <div className="shrink-0" style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.09)' }} />
+          )}
+          <div className="flex-1 flex flex-col items-center py-4">
             <span
-              className="w-6 text-center text-[20px] font-semibold text-[#f0ede8]"
+              className="text-[10px] uppercase tracking-[0.08em] text-white/30 mb-1"
               style={{ fontFamily: 'var(--font-geist-mono)' }}
             >
-              {scaledServings}
+              Servings
             </span>
-            <button
-              onClick={() => adjustServings(1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/50 transition-colors hover:border-white/20 hover:text-white"
-              aria-label="Increase servings"
-            >
-              +
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => adjustServings(-1)}
+                disabled={scaledServings <= 1}
+                className="flex items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white disabled:opacity-20"
+                style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+                aria-label="Decrease servings"
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>−</span>
+              </button>
+              <span
+                className="text-[22px] text-[#f0ede8]"
+                style={{ fontFamily: 'Georgia, serif', minWidth: 20, textAlign: 'center' as const }}
+              >
+                {scaledServings}
+              </span>
+              <button
+                onClick={() => adjustServings(1)}
+                className="flex items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white"
+                style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+                aria-label="Increase servings"
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -546,27 +586,29 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
           background: 'linear-gradient(to top, rgba(10,10,10,1) 60%, rgba(10,10,10,0))',
         }}
       >
-        <div className="mx-auto max-w-2xl flex flex-col gap-2">
+        <div className="mx-auto max-w-2xl flex flex-col items-center gap-3">
           <button
             onClick={() => router.push(`/recipes/${currentRecipe.id}/cook?servings=${scaledServings}`)}
             className="w-full rounded-2xl py-4 text-[13px] font-semibold tracking-[0.04em] text-[#0a0a0a] transition-opacity hover:opacity-90"
-            style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
+            style={{ background: '#5a6b42', fontFamily: 'var(--font-geist-mono)' }}
           >
             Start cooking → {scaledServings} {scaledServings === 1 ? 'serving' : 'servings'}
           </button>
           <button
             onClick={handleAddToShoppingList}
             disabled={addingToList}
-            className="w-full rounded-2xl py-3.5 text-[13px] font-medium tracking-[0.04em] transition-opacity"
+            className="text-[11px] tracking-[0.04em] transition-opacity hover:opacity-80"
             style={{
-              background:  'rgba(255,255,255,0.06)',
-              border:      '1px solid rgba(255,255,255,0.1)',
-              color:       addingToList ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)',
-              fontFamily:  'var(--font-geist-mono)',
-              opacity:     addingToList ? 0.6 : 1,
+              fontFamily:          'var(--font-geist-mono)',
+              color:               addingToList ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.35)',
+              background:          'none',
+              border:              'none',
+              textDecoration:      'underline',
+              textUnderlineOffset: '3px',
+              cursor:              addingToList ? 'default' : 'pointer',
             }}
           >
-            {addingToList ? 'Adding…' : '+ Add to shopping list'}
+            {addingToList ? 'Adding…' : 'Add to shopping list'}
           </button>
         </div>
 
@@ -580,28 +622,6 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
           </div>
         )}
       </div>
-    </div>
-  )
-}
-
-function MetaPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      className="rounded-xl border border-white/[0.07] px-4 py-2.5 text-center"
-      style={{ background: 'rgba(255,255,255,0.03)' }}
-    >
-      <p
-        className="text-[9px] uppercase tracking-[0.1em] text-white/20 mb-0.5"
-        style={{ fontFamily: 'var(--font-geist-mono)' }}
-      >
-        {label}
-      </p>
-      <p
-        className="text-[15px] text-[#f0ede8]"
-        style={{ fontFamily: 'var(--font-geist-mono)' }}
-      >
-        {value}
-      </p>
     </div>
   )
 }
