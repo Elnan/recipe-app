@@ -2,15 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Recipe, RecipeCategory } from '../../../types/recipe'
-
-const CATEGORY_ACCENT: Record<RecipeCategory, string> = {
-  dinner:    '#e94560',
-  breakfast: '#f4a261',
-  baking:    '#c77dff',
-  dessert:   '#48cae4',
-  other:     '#52b788',
-}
+import type { Recipe } from '../../../types/recipe'
 
 function formatAmount(n: number): string {
   if (n === 0) return '0'
@@ -39,16 +31,23 @@ export default function CookingMode({
   const [visible, setVisible] = useState(true)
   const [animDir, setAnimDir] = useState<'forward' | 'back' | null>(null)
   const [done,    setDone]    = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
-  // Wake lock — keep screen on while cooking
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768)
+    const handler = () => setIsDesktop(window.innerWidth >= 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   useEffect(() => {
     async function acquireWakeLock() {
       try {
         wakeLockRef.current = await navigator.wakeLock?.request('screen') ?? null
       } catch {
-        // Not supported or denied — silently continue
+        // Not supported or denied
       }
     }
     acquireWakeLock()
@@ -58,7 +57,6 @@ export default function CookingMode({
   const steps  = recipe.steps.slice().sort((a, b) => a.order - b.order)
   const total  = steps.length
   const scale  = scaledServings / recipe.servings
-  const accent = CATEGORY_ACCENT[recipe.category] ?? CATEGORY_ACCENT.other
 
   function navigate(dir: 'forward' | 'back') {
     if (dir === 'forward' && step === total - 1) {
@@ -78,10 +76,10 @@ export default function CookingMode({
   }
 
   function handleTap(e: React.MouseEvent) {
+    if (isDesktop) return
     navigate(e.clientX > window.innerWidth / 2 ? 'forward' : 'back')
   }
 
-  // Completion screen
   if (done) {
     return (
       <div
@@ -114,11 +112,49 @@ export default function CookingMode({
 
   const currentStep = steps[step]
   const stepIngNames = new Set(currentStep?.ingredients_used ?? [])
-const stepIngs = recipe.ingredients.filter(ing =>
+  const stepIngs = recipe.ingredients.filter(ing =>
     [...stepIngNames].some(used => used.toLowerCase() === ing.name.toLowerCase())
   )
 
   const translateX = visible ? '0px' : animDir === 'forward' ? '-24px' : '24px'
+
+  function renderIngredientRows(desktop: boolean) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {stepIngs.map(ing => (
+          <div key={ing.name} style={{
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: desktop ? '12px 16px' : '8px 12px',
+            borderRadius: desktop ? 12 : 10,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-geist-sans)',
+              fontSize: desktop ? 18 : 12,
+              color: 'rgba(255,255,255,0.7)',
+              flex: 1, minWidth: 0,
+              overflow: 'hidden', textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {ing.name}
+            </span>
+            {ing.amount != null && (
+              <span style={{
+                fontFamily: 'var(--font-geist-mono)',
+                fontSize: desktop ? 17 : 11,
+                color: '#5a6b42',
+                flexShrink: 0, marginLeft: 12,
+              }}>
+                {formatAmount(ing.amount * scale)} {ing.unit}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -131,94 +167,183 @@ const stepIngs = recipe.ingredients.filter(ing =>
         onClick={e => e.stopPropagation()}
         style={{ background: 'rgba(10,10,10,0.95)' }}
       >
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32 }}>
-        {/* Progress bar */}
-        <div className="h-[2px] w-full rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{ width: `${((step + 1) / total) * 100}%`, background: accent }}
-          />
-        </div>
+        <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32 }}>
+          {/* Progress bar */}
+          <div className="h-[3px] w-full rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${((step + 1) / total) * 100}%`, background: '#5a6b42' }}
+            />
+          </div>
 
-        <div className="flex items-center justify-between">
-          <span
-            className="text-[11px] text-white/30 uppercase tracking-[0.08em]"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
-          >
-            Step {step + 1} of {total}
-          </span>
-          <button
-            onClick={() => router.back()}
-            className="text-[11px] text-white/30 hover:text-white/60 transition-colors border border-white/10 rounded-lg px-3 py-1"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
-          >
-            ✕ Exit
-          </button>
+          <div className="flex items-center justify-between">
+            <span
+              className="text-[11px] text-white/30 uppercase tracking-[0.08em]"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              Step {step + 1} of {total}
+            </span>
+            <button
+              onClick={() => router.back()}
+              className="text-[11px] text-white/30 hover:text-white/60 transition-colors border border-white/10 rounded-lg px-3 py-1"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              ✕ Exit
+            </button>
+          </div>
         </div>
-      </div>
       </div>
 
       {/* ── Main content ── */}
-      <div
-        className="flex-1 flex flex-col justify-center py-6 overflow-hidden"
-        style={{
-          opacity:    visible ? 1 : 0,
-          transform:  `translateX(${translateX})`,
-          transition: 'opacity 0.18s ease, transform 0.18s ease',
-        }}
-      >
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32, width: '100%' }}>
-        {/* Recipe title */}
-        <p
-          className="text-[10px] uppercase tracking-[0.1em] text-white/25 mb-6"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+      {isDesktop ? (
+        /* Desktop two-column layout */
+        <div
+          style={{
+            flex: 1, display: 'flex',
+            padding: '0 48px', overflow: 'hidden',
+            paddingTop: 8,
+            opacity: visible ? 1 : 0,
+            transform: `translateX(${translateX})`,
+            transition: 'opacity 0.18s ease, transform 0.18s ease',
+          }}
         >
-          {recipe.title}
-        </p>
+          {/* Left — instruction */}
+          <div style={{ flex: '0 0 58%', paddingRight: 48, overflowY: 'auto', paddingBottom: 40, paddingTop: 24 }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-geist-mono)',
+                fontSize: 10, textTransform: 'uppercase',
+                letterSpacing: '0.1em', color: 'rgba(255,255,255,0.25)',
+                margin: '0 0 24px',
+              }}
+            >
+              {recipe.title}
+            </p>
+            <p
+              style={{
+                fontFamily: 'Georgia, serif', fontSize: 28,
+                fontWeight: 400, lineHeight: 1.45,
+                color: '#f0ede8', margin: 0,
+              }}
+            >
+              {currentStep?.instruction}
+            </p>
+          </div>
 
-        {/* Step instruction */}
-        <p
-          className="text-[22px] leading-snug text-[#f0ede8] mb-8"
-          style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}
+          {/* Divider */}
+          <div style={{ width: 1, flexShrink: 0, margin: '0 0 40px', background: 'rgba(255,255,255,0.06)' }} />
+
+          {/* Right — ingredients */}
+          <div style={{ flex: 1, paddingLeft: 48, overflowY: 'auto', paddingBottom: 40, paddingTop: 24 }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-geist-mono)',
+                fontSize: 10, textTransform: 'uppercase',
+                letterSpacing: '0.1em', color: 'rgba(255,255,255,0.25)',
+                margin: '0 0 16px',
+              }}
+            >
+              This step
+            </p>
+            {stepIngs.length > 0 ? renderIngredientRows(true) : (
+              <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, fontFamily: 'var(--font-geist-sans)' }}>
+                No specific ingredients
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Mobile single-column layout */
+        <div
+          className="flex-1 flex flex-col justify-start overflow-auto"
+          style={{
+            paddingTop: 8,
+            opacity: visible ? 1 : 0,
+            transform: `translateX(${translateX})`,
+            transition: 'opacity 0.18s ease, transform 0.18s ease',
+          }}
         >
-          {currentStep?.instruction}
-        </p>
+          <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32, paddingTop: 24, paddingBottom: 24, width: '100%' }}>
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] text-white/25 mb-6"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              {recipe.title}
+            </p>
 
-        {/* Ingredient pills */}
-        {stepIngs.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {stepIngs.map(ing => (
-              <div
-                key={ing.name}
-                className="rounded-xl px-3 py-1.5 text-[12px]"
-                style={{
-                  background:  'rgba(255,255,255,0.07)',
-                  border:      '1px solid rgba(255,255,255,0.1)',
-                  fontFamily:  'var(--font-geist-mono)',
-                  color:       'rgba(255,255,255,0.7)',
-                }}
-              >
-                {ing.name}
-                {ing.amount != null && (
-                  <span className="ml-1.5 text-white/35">
-                    {formatAmount(ing.amount * scale)} {ing.unit}
-                  </span>
-                )}
-              </div>
+            <p
+              className="text-[22px] leading-snug text-[#f0ede8] mb-8"
+              style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}
+            >
+              {currentStep?.instruction}
+            </p>
+
+            {stepIngs.length > 0 && renderIngredientRows(false)}
+          </div>
+        </div>
+      )}
+
+      {/* ── Bottom navigation ── */}
+      {isDesktop ? (
+        /* Desktop: explicit buttons + step dots */
+        <div
+          className="shrink-0 flex items-center justify-between px-12 pb-8 pt-3"
+          onClick={e => e.stopPropagation()}
+        >
+          <button
+            onClick={() => navigate('back')}
+            style={{
+              fontFamily: 'var(--font-geist-mono)', fontSize: 13,
+              color: step > 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10, padding: '10px 20px',
+              cursor: step > 0 ? 'pointer' : 'default',
+            }}
+          >
+            ← Prev
+          </button>
+
+          {/* Step dots */}
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            {steps.map((_, i) => (
+              <div key={i} style={{
+                width: i === step ? 20 : 6, height: 6,
+                borderRadius: 999,
+                background: i === step
+                  ? '#5a6b42'
+                  : i < step
+                    ? 'rgba(90,107,66,0.4)'
+                    : 'rgba(255,255,255,0.1)',
+                transition: 'all 0.2s ease',
+              }} />
             ))}
           </div>
-        )}
-      </div>
-      </div>
 
-      {/* ── Bottom tap hint ── */}
-      <div
-        className="shrink-0 flex items-center justify-between px-8 pb-10 pt-2 pointer-events-none"
-        style={{ color: 'rgba(255,255,255,0.18)', fontFamily: 'var(--font-geist-mono)', fontSize: 11 }}
-      >
-        <span>{step > 0 ? '← Prev' : ''}</span>
-        <span>{step === total - 1 ? 'Finish →' : 'Next →'}</span>
-      </div>
+          <button
+            onClick={() => navigate('forward')}
+            style={{
+              fontFamily: 'var(--font-geist-mono)', fontSize: 13,
+              color: '#fff',
+              background: '#5a6b42',
+              border: 'none',
+              borderRadius: 10, padding: '10px 20px',
+              cursor: 'pointer',
+            }}
+          >
+            {step === total - 1 ? 'Finish →' : 'Next →'}
+          </button>
+        </div>
+      ) : (
+        /* Mobile: tap hints */
+        <div
+          className="shrink-0 flex items-center justify-between px-8 pb-10 pt-2 pointer-events-none"
+          style={{ color: 'rgba(255,255,255,0.18)', fontFamily: 'var(--font-geist-mono)', fontSize: 11 }}
+        >
+          <span>{step > 0 ? '← Prev' : ''}</span>
+          <span>{step === total - 1 ? 'Finish →' : 'Next →'}</span>
+        </div>
+      )}
     </div>
   )
 }

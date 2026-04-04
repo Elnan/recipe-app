@@ -106,6 +106,31 @@
 - Per-recipe protein badges in protein colours
 - Clicking active card in list opens menu detail
 
+## Screen 5 — Cooking Mode
+
+### Both layouts
+- Progress bar: olive, 3px, top of screen
+- Content anchored to top — instruction visible immediately on glance
+- Ingredient rows: full-width, name left (flex:1, truncate), 
+  amount right in olive — no wrapping chips
+- Category accent colour system removed — olive only
+- Wake lock: keep screen on while cooking
+
+### Mobile
+- Tap left half → previous step
+- Tap right half → next step  
+- Single column: recipe title → instruction (Georgia 20px) → ingredient rows
+- Prev/Next hints at bottom, pointer-events-none
+- Scroll if instruction is long
+
+### Desktop
+- Two-column layout: instruction left (58%), ingredients right (42%)
+- Vertical divider between columns
+- Instruction text: Georgia 28px — readable from standing distance
+- Explicit Prev/Next buttons — click not tap
+- Step dots indicator bottom center
+- No tap-anywhere navigation
+
 ## Screen 6 — Profile & Settings (planned, not yet built)
 
 - Planned for when multi-user support is needed
