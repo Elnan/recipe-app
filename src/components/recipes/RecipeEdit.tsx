@@ -15,14 +15,6 @@ const CATEGORY_ACCENT: Record<RecipeCategory, string> = {
   other:     '#52b788',
 }
 
-const CATEGORY_BG: Record<RecipeCategory, string> = {
-  dinner:    'linear-gradient(135deg, #2a0a0f, #1a0508)',
-  breakfast: 'linear-gradient(135deg, #2a1500, #1a0d00)',
-  baking:    'linear-gradient(135deg, #1a0a2e, #0f0520)',
-  dessert:   'linear-gradient(135deg, #001a20, #000f14)',
-  other:     'linear-gradient(135deg, #001a0e, #000f08)',
-}
-
 const CATEGORY_EMOJI: Record<RecipeCategory, string> = {
   dinner: '🍽️', breakfast: '☀️', baking: '🍞', dessert: '🍮', other: '🥄',
 }
@@ -57,6 +49,7 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
   const [deleting,          setDeleting]          = useState(false)
 
   const accent = CATEGORY_ACCENT[draft.category] ?? CATEGORY_ACCENT.other
+  const hasHeroPhoto = !!draft.image_url
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
 
@@ -173,46 +166,54 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-48">
+    <div className="min-h-screen pb-48" style={{ background: 'var(--color-bg)' }}>
 
       {/* ── Hero ── */}
       <div className="relative h-72 overflow-hidden">
         {draft.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={draft.image_url}
-            alt={draft.title}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <div className="absolute inset-0" style={{ background: '#1a0508' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={draft.image_url}
+              alt={draft.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
         ) : draft.image_icon ? (
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ background: CATEGORY_BG[draft.category] ?? CATEGORY_BG.other }}
+            style={{ background: 'var(--color-subtle)' }}
           >
             <RecipeIcon icon={draft.image_icon} color={accent} size={80} />
           </div>
         ) : (
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ background: CATEGORY_BG[draft.category] ?? CATEGORY_BG.other }}
+            style={{ background: 'var(--color-subtle)' }}
           >
-            <span className="text-[80px] opacity-20">{CATEGORY_EMOJI[draft.category]}</span>
+            <span className="text-[80px] opacity-20" style={{ color: 'var(--color-text-dim)' }}>{CATEGORY_EMOJI[draft.category]}</span>
           </div>
         )}
 
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.8) 100%)' }}
-        />
+        {hasHeroPhoto && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.38) 48%, rgba(0,0,0,0.93) 100%)',
+            }}
+          />
+        )}
 
         {/* Change image button */}
         <button
           onClick={() => setShowImagePicker(true)}
-          className="absolute right-4 top-4 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] text-white/70 hover:text-white transition-colors"
+          className="absolute right-4 top-4 rounded-lg border px-3 py-1.5 text-[11px] transition-colors"
           style={{
-            background:    'rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(8px)',
+            background:    hasHeroPhoto ? 'rgba(0,0,0,0.45)' : 'var(--color-surface)',
+            backdropFilter: hasHeroPhoto ? 'blur(8px)' : undefined,
+            borderColor:   'var(--color-border)',
+            color:         hasHeroPhoto ? '#fff' : 'var(--color-text)',
             fontFamily:    'var(--font-geist-mono)',
           }}
         >
@@ -225,10 +226,10 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             value={draft.title}
             onChange={e => set('title', e.target.value)}
             placeholder="Recipe title"
-            className="w-full bg-transparent text-[26px] font-bold leading-tight text-white placeholder:text-white/30 focus:outline-none"
+            className={`w-full bg-transparent text-[26px] font-bold leading-tight focus:outline-none ${hasHeroPhoto ? 'text-white placeholder:text-[color:var(--color-text-dim)]' : 'text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)]'}`}
             style={{
               fontFamily:  'var(--font-geist-sans)',
-              textShadow:  '0 2px 8px rgba(0,0,0,0.6)',
+              textShadow:  hasHeroPhoto ? '0 2px 8px rgba(0,0,0,0.6)' : 'none',
             }}
           />
         </div>
@@ -291,8 +292,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             onChange={e => set('description', e.target.value || undefined)}
             placeholder="Brief description…"
             rows={3}
-            className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-3 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20 resize-none"
-            style={{ fontFamily: 'var(--font-geist-sans)' }}
+            className="w-full rounded-xl border px-4 py-3 text-[13px] focus:outline-none resize-none"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-sans)' }}
           />
         </div>
 
@@ -330,8 +331,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             value={draft.cuisine ?? ''}
             onChange={e => set('cuisine', e.target.value || undefined)}
             placeholder="e.g. Italian, Norwegian, Mexican…"
-            className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-3 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
+            className="w-full rounded-xl border px-4 py-3 text-[13px] focus:outline-none"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-mono)' }}
           />
         </div>
 
@@ -342,8 +343,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             {draft.ingredients.map((ing, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-white/[0.07] p-3"
-                style={{ background: 'rgba(255,255,255,0.03)' }}
+                className="rounded-2xl border p-3"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}
               >
                 {/* Main row */}
                 <div className="flex items-center gap-2">
@@ -352,12 +353,14 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     <button
                       onClick={() => moveIngredient(i, -1)}
                       disabled={i === 0}
-                      className="text-[10px] text-white/20 hover:text-white/50 disabled:opacity-20 leading-none"
+                      className="text-[10px] hover:opacity-70 disabled:opacity-20 leading-none"
+                      style={{ color: 'var(--color-text-dim)' }}
                     >▲</button>
                     <button
                       onClick={() => moveIngredient(i, 1)}
                       disabled={i === draft.ingredients.length - 1}
-                      className="text-[10px] text-white/20 hover:text-white/50 disabled:opacity-20 leading-none"
+                      className="text-[10px] hover:opacity-70 disabled:opacity-20 leading-none"
+                      style={{ color: 'var(--color-text-dim)' }}
                     >▼</button>
                   </div>
 
@@ -366,8 +369,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     value={ing.name}
                     onChange={e => updateIngredient(i, { name: e.target.value })}
                     placeholder="Ingredient"
-                    className="flex-1 min-w-0 bg-transparent text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none border-b border-white/[0.07] pb-1"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                    className="flex-1 min-w-0 bg-transparent text-[13px] focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
                   />
 
                   {/* Amount */}
@@ -377,8 +380,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     min={0}
                     step="any"
                     onChange={e => updateIngredient(i, { amount: parseFloat(e.target.value) || 0 })}
-                    className="w-14 bg-transparent text-[13px] text-[#f0ede8] text-right focus:outline-none border-b border-white/[0.07] pb-1"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-14 bg-transparent text-[13px] text-right focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
                   />
 
                   {/* Unit */}
@@ -386,14 +389,15 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     value={ing.unit}
                     onChange={e => updateIngredient(i, { unit: e.target.value })}
                     placeholder="unit"
-                    className="w-14 bg-transparent text-[13px] text-white/50 placeholder:text-white/20 focus:outline-none border-b border-white/[0.07] pb-1"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-14 bg-transparent text-[13px] focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text-dim)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
                   />
 
                   {/* Delete */}
                   <button
                     onClick={() => removeIngredient(i)}
-                    className="shrink-0 text-[16px] leading-none text-white/20 hover:text-[#e94560] transition-colors"
+                    className="shrink-0 text-[16px] leading-none hover:text-[#e94560] transition-colors"
+                    style={{ color: 'var(--color-text-dim)' }}
                   >
                     ×
                   </button>
@@ -404,16 +408,16 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                   value={ing.notes ?? ''}
                   onChange={e => updateIngredient(i, { notes: e.target.value || undefined })}
                   placeholder="Notes (optional)"
-                  className="mt-2 w-full bg-transparent text-[11px] text-white/30 placeholder:text-white/15 focus:outline-none pl-6"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  className="mt-2 w-full bg-transparent text-[11px] focus:outline-none pl-6"
+                  style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-sans)' }}
                 />
               </div>
             ))}
 
             <button
               onClick={addIngredient}
-              className="w-full rounded-2xl border-2 border-dashed border-white/[0.08] py-3 text-[11px] uppercase tracking-[0.07em] text-white/25 hover:text-white/40 hover:border-white/[0.15] transition-colors"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              className="w-full rounded-2xl border-2 border-dashed py-3 text-[11px] uppercase tracking-[0.07em] transition-colors hover:opacity-80"
+              style={{ fontFamily: 'var(--font-geist-mono)', borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
             >
               + Add ingredient
             </button>
@@ -427,14 +431,14 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             {draft.steps.map((step, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-white/[0.07] p-3"
-                style={{ background: 'rgba(255,255,255,0.03)' }}
+                className="rounded-2xl border p-3"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}
               >
                 <div className="flex items-start gap-2">
                   {/* Step number */}
                   <span
-                    className="shrink-0 mt-1 w-6 text-center text-[10px] uppercase tracking-[0.1em] text-white/20"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    className="shrink-0 mt-1 w-6 text-center text-[10px] uppercase tracking-[0.1em]"
+                    style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
                   >
                     {String(step.order).padStart(2, '0')}
                   </span>
@@ -445,8 +449,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     onChange={e => updateStep(i, { instruction: e.target.value })}
                     placeholder="Step instruction…"
                     rows={2}
-                    className="flex-1 bg-transparent text-[13px] leading-snug text-[#f0ede8] placeholder:text-white/20 focus:outline-none resize-none"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                    className="flex-1 bg-transparent text-[13px] leading-snug focus:outline-none resize-none"
+                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                   />
 
                   {/* Reorder + delete */}
@@ -454,16 +458,19 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     <button
                       onClick={() => moveStep(i, -1)}
                       disabled={i === 0}
-                      className="text-[10px] text-white/20 hover:text-white/50 disabled:opacity-20 leading-none"
+                      className="text-[10px] hover:opacity-70 disabled:opacity-20 leading-none"
+                      style={{ color: 'var(--color-text-dim)' }}
                     >▲</button>
                     <button
                       onClick={() => removeStep(i)}
-                      className="text-[16px] leading-none text-white/20 hover:text-[#e94560] transition-colors"
+                      className="text-[16px] leading-none hover:text-[#e94560] transition-colors"
+                      style={{ color: 'var(--color-text-dim)' }}
                     >×</button>
                     <button
                       onClick={() => moveStep(i, 1)}
                       disabled={i === draft.steps.length - 1}
-                      className="text-[10px] text-white/20 hover:text-white/50 disabled:opacity-20 leading-none"
+                      className="text-[10px] hover:opacity-70 disabled:opacity-20 leading-none"
+                      style={{ color: 'var(--color-text-dim)' }}
                     >▼</button>
                   </div>
                 </div>
@@ -472,8 +479,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
 
             <button
               onClick={addStep}
-              className="w-full rounded-2xl border-2 border-dashed border-white/[0.08] py-3 text-[11px] uppercase tracking-[0.07em] text-white/25 hover:text-white/40 hover:border-white/[0.15] transition-colors"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              className="w-full rounded-2xl border-2 border-dashed py-3 text-[11px] uppercase tracking-[0.07em] transition-colors hover:opacity-80"
+              style={{ fontFamily: 'var(--font-geist-mono)', borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
             >
               + Add step
             </button>
@@ -495,18 +502,19 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
 
       {/* ── Sticky footer (bottom: 64 clears BottomNav) ── */}
       <div
-        className="fixed left-0 right-0 px-5 pt-3 pb-4 border-t border-white/[0.06]"
+        className="fixed left-0 right-0 px-5 pt-3 pb-4 border-t"
         style={{
           bottom:          64,
-          background:      'rgba(10,10,10,0.96)',
+          borderColor:     'var(--color-border)',
+          background:      'color-mix(in srgb, var(--color-bg) 96%, transparent)',
           backdropFilter:  'blur(16px)',
         }}
       >
         <div className="mx-auto max-w-2xl flex gap-3">
           <button
             onClick={onCancel}
-            className="w-24 shrink-0 rounded-2xl border border-white/10 py-4 text-[13px] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
+            className="w-24 shrink-0 rounded-2xl border py-4 text-[13px] transition-opacity hover:opacity-80"
+            style={{ fontFamily: 'var(--font-geist-mono)', borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
           >
             Cancel
           </button>
@@ -558,8 +566,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p
-      className="mb-2 text-[10px] uppercase tracking-[0.1em] text-white/30"
-      style={{ fontFamily: 'var(--font-geist-mono)' }}
+      className="mb-2 text-[10px] uppercase tracking-[0.1em]"
+      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
     >
       {children}
     </p>
@@ -596,8 +604,8 @@ function PillSelector({
             style={{
               fontFamily:  'var(--font-geist-mono)',
               background:  active ? thisAccent : 'transparent',
-              borderColor: active ? thisAccent : 'rgba(255,255,255,0.12)',
-              color:       active ? '#0a0a0a'  : 'rgba(255,255,255,0.4)',
+              borderColor: active ? thisAccent : 'var(--color-border)',
+              color:       active ? '#0a0a0a'  : 'var(--color-text-dim)',
               fontWeight:  active ? 600 : 400,
             }}
           >
@@ -642,8 +650,8 @@ function MultiPillSelector({
             style={{
               fontFamily:  'var(--font-geist-mono)',
               background:  active ? accent : 'transparent',
-              borderColor: active ? accent : 'rgba(255,255,255,0.12)',
-              color:       active ? '#0a0a0a' : 'rgba(255,255,255,0.4)',
+              borderColor: active ? accent : 'var(--color-border)',
+              color:       active ? '#0a0a0a' : 'var(--color-text-dim)',
               fontWeight:  active ? 600 : 400,
             }}
           >
@@ -689,12 +697,12 @@ function EditableNumber({ label, value, min, onChange, nullable }: EditableNumbe
 
   return (
     <div
-      className="flex items-center justify-between rounded-xl border border-white/[0.07] px-4 py-3"
-      style={{ background: 'rgba(255,255,255,0.03)' }}
+      className="flex items-center justify-between rounded-xl border px-4 py-3"
+      style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}
     >
       <span
-        className="text-[12px] text-white/40"
-        style={{ fontFamily: 'var(--font-geist-mono)' }}
+        className="text-[12px]"
+        style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
       >
         {label}
       </span>
@@ -702,7 +710,8 @@ function EditableNumber({ label, value, min, onChange, nullable }: EditableNumbe
         <button
           onClick={() => adjust(-1)}
           disabled={value != null && value <= min}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border transition-opacity hover:opacity-80 disabled:opacity-20"
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
         >
           −
         </button>
@@ -714,14 +723,14 @@ function EditableNumber({ label, value, min, onChange, nullable }: EditableNumbe
             onChange={e => setRaw(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            className="w-12 bg-transparent text-center text-[18px] font-semibold text-[#f0ede8] focus:outline-none border-b border-white/30"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
+            className="w-12 bg-transparent text-center text-[18px] font-semibold focus:outline-none border-b"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
           />
         ) : (
           <button
             onClick={startEdit}
-            className="w-12 text-center text-[18px] font-semibold text-[#f0ede8] hover:opacity-70 transition-opacity"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
+            className="w-12 text-center text-[18px] font-semibold hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-mono)' }}
           >
             {value ?? '—'}
           </button>
@@ -729,7 +738,8 @@ function EditableNumber({ label, value, min, onChange, nullable }: EditableNumbe
 
         <button
           onClick={() => adjust(1)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border transition-opacity hover:opacity-80"
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
         >
           +
         </button>
@@ -752,21 +762,21 @@ function DeleteConfirmSheet({ onConfirm, onCancel, deleting }: DeleteConfirmShee
         onClick={onCancel}
       />
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl border-t border-white/[0.06] px-5 pt-4 pb-10"
-        style={{ background: '#111' }}
+        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl border-t px-5 pt-4 pb-10"
+        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
         <div className="flex justify-center mb-6">
-          <div className="w-9 h-1 rounded-full bg-white/10" />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
         </div>
         <p
-          className="mb-2 text-center text-[15px] font-semibold text-[#f0ede8]"
-          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          className="mb-2 text-center text-[15px] font-semibold"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
         >
           Delete recipe?
         </p>
         <p
-          className="mb-8 text-center text-[12px] text-white/30"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="mb-8 text-center text-[12px]"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           This cannot be undone.
         </p>
@@ -781,8 +791,8 @@ function DeleteConfirmSheet({ onConfirm, onCancel, deleting }: DeleteConfirmShee
           </button>
           <button
             onClick={onCancel}
-            className="w-full rounded-2xl border border-white/10 py-4 text-[13px] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors"
-            style={{ fontFamily: 'var(--font-geist-mono)' }}
+            className="w-full rounded-2xl border py-4 text-[13px] transition-opacity hover:opacity-80"
+            style={{ fontFamily: 'var(--font-geist-mono)', borderColor: 'var(--color-border)', color: 'var(--color-text-dim)' }}
           >
             Cancel
           </button>

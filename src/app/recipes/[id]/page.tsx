@@ -13,7 +13,7 @@ export default async function RecipePage({ params }: Props) {
     return <RecipeDetail recipe={recipe} />
   } catch {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+      <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--color-bg)' }}>
         <p
           className="text-[13px] text-white/30"
           style={{ fontFamily: 'var(--font-geist-mono)' }}

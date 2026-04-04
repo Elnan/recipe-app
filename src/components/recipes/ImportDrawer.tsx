@@ -136,8 +136,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
       {/* Header */}
       <div className="mb-4">
         <p
-          className="text-[13px] font-semibold text-[#f0ede8] mb-1"
-          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          className="text-[13px] font-semibold mb-1"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
         >
           Already imported
         </p>
@@ -150,7 +150,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
       </div>
 
       {/* View mode toggle */}
-      <div className="flex gap-1 rounded-xl bg-white/[0.04] p-1 mb-4">
+      <div className="flex gap-1 rounded-xl p-1 mb-4" style={{ background: 'var(--color-surface)' }}>
         {(['diff', 'full'] as const).map(mode => (
           <button
             key={mode}
@@ -159,7 +159,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
             style={{
               fontFamily: 'var(--font-geist-mono)',
               background: viewMode === mode ? 'rgba(255,255,255,0.1)' : 'transparent',
-              color:      viewMode === mode ? '#f0ede8' : 'rgba(255,255,255,0.3)',
+              color:      viewMode === mode ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
               fontWeight: viewMode === mode ? 600 : 400,
             }}
           >
@@ -221,7 +221,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
         {viewMode === 'full' && (
           <div>
             {/* Side toggle */}
-            <div className="flex gap-1 rounded-xl bg-white/[0.04] p-1 mb-4">
+            <div className="flex gap-1 rounded-xl p-1 mb-4" style={{ background: 'var(--color-surface)' }}>
               {(['saved', 'reimported'] as const).map(side => (
                 <button
                   key={side}
@@ -230,7 +230,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
                     background: fullSide === side ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color:      fullSide === side ? '#f0ede8' : 'rgba(255,255,255,0.3)',
+                    color:      fullSide === side ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
                     fontWeight: fullSide === side ? 600 : 400,
                   }}
                 >
@@ -251,8 +251,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                     style={{ background: 'rgba(255,255,255,0.03)' }}
                   >
                     <span
-                      className="text-[13px] text-[#f0ede8]"
-                      style={{ fontFamily: 'var(--font-geist-sans)' }}
+                      className="text-[13px]"
+                      style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                     >
                       {ing.name}
                     </span>
@@ -490,8 +490,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
           {/* Top row: title + close */}
           <div className="flex items-center justify-between mb-5 shrink-0">
             <h2
-              className="text-[15px] font-semibold text-[#f0ede8]"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[15px] font-semibold"
+              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
             >
               {drawerState === 'cached' ? 'Already imported' : 'Import recipe'}
             </h2>
@@ -508,7 +508,7 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
           {drawerState === 'input' && (
             <>
               {/* Tab bar */}
-              <div className="flex gap-1 rounded-xl bg-white/[0.04] p-1 mb-5 shrink-0">
+              <div className="flex gap-1 rounded-xl p-1 mb-5 shrink-0" style={{ background: 'var(--color-surface)' }}>
                 {(['url', 'text', 'photo'] as Tab[]).map(t => (
                   <button
                     key={t}
@@ -517,7 +517,7 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     style={{
                       fontFamily: 'var(--font-geist-mono)',
                       background: tab === t ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      color:      tab === t ? '#f0ede8' : 'rgba(255,255,255,0.3)',
+                      color:      tab === t ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
                       fontWeight: tab === t ? 600 : 400,
                     }}
                   >
@@ -534,8 +534,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setUrlInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleUrlSubmit()}
                     placeholder="https://..."
-                    className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-3 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Import →" onClick={handleUrlSubmit} disabled={!urlInput.trim()} />
@@ -550,8 +550,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setTextInput(e.target.value)}
                     placeholder="Paste recipe text or Instagram caption…"
                     rows={7}
-                    className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-3 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20 resize-none"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                    className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20 resize-none"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Parse →" onClick={handleTextSubmit} disabled={!textInput.trim()} />

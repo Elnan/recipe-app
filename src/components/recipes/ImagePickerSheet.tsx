@@ -93,8 +93,8 @@ export default function ImagePickerSheet({
           {/* Title row */}
           <div className="flex items-center justify-between mb-5 shrink-0">
             <h2
-              className="text-[15px] font-semibold text-[#f0ede8]"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[15px] font-semibold"
+              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
             >
               Change image
             </h2>
@@ -108,7 +108,7 @@ export default function ImagePickerSheet({
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-1 rounded-xl bg-white/[0.04] p-1 mb-5 shrink-0">
+          <div className="flex gap-1 rounded-xl p-1 mb-5 shrink-0" style={{ background: 'var(--color-surface)' }}>
             {(['upload', 'url', 'icon'] as SheetTab[]).map(t => (
               <button
                 key={t}
@@ -117,7 +117,7 @@ export default function ImagePickerSheet({
                 style={{
                   fontFamily: 'var(--font-geist-mono)',
                   background: tab === t ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color:      tab === t ? '#f0ede8' : 'rgba(255,255,255,0.3)',
+                  color:      tab === t ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
                   fontWeight: tab === t ? 600 : 400,
                 }}
               >
@@ -195,8 +195,8 @@ export default function ImagePickerSheet({
                 }}
                 onKeyDown={e => e.key === 'Enter' && handleUrlConfirm()}
                 placeholder="https://…"
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] px-4 py-3 text-[13px] text-[#f0ede8] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
+                className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20"
+                style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
               />
 
               {previewUrl && (

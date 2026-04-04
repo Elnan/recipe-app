@@ -21,9 +21,8 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
         left:            0,
         right:           0,
         zIndex:          onImportClick ? 31 : 30,
-        background:      'rgba(10,10,10,0.92)',
-        backdropFilter:  'blur(16px)',
-        borderTop:       '1px solid rgba(255,255,255,0.06)',
+        background:      'var(--color-surface)',
+        borderTop:       '1px solid var(--color-border)',
         display:         'flex',
         paddingBottom:   'env(safe-area-inset-bottom)',
       }}
@@ -48,7 +47,7 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
                 background:     'none',
                 border:         'none',
                 cursor:         'pointer',
-                color:          'rgba(255,255,255,0.3)',
+                color:          'var(--color-text-dim)',
                 transition:     'color 150ms ease',
               }}
             >
@@ -80,7 +79,7 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
               gap:            4,
               padding:        '10px 0 12px',
               textDecoration: 'none',
-              color:          active ? '#e94560' : 'rgba(255,255,255,0.3)',
+              color:          active ? 'var(--color-accent)' : 'var(--color-text-dim)',
               transition:     'color 150ms ease',
             }}
           >
@@ -95,6 +94,14 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
             >
               {label}
             </span>
+            {active && (
+              <div style={{
+                width: 4,
+                height: 4,
+                borderRadius: 2,
+                background: 'var(--color-accent)',
+              }} />
+            )}
           </Link>
         )
       })}
@@ -105,7 +112,7 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
 // ── Icons ──────────────────────────────────────────────────────────────────
 
 function RecipesIcon({ active }: { active: boolean }) {
-  const c = active ? '#e94560' : 'rgba(255,255,255,0.3)'
+  const c = active ? 'var(--color-accent)' : 'var(--color-text-dim)'
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <rect x="3" y="3" width="7" height="7" rx="1.5" stroke={c} strokeWidth="1.5" />
@@ -117,7 +124,7 @@ function RecipesIcon({ active }: { active: boolean }) {
 }
 
 function MenusIcon({ active }: { active: boolean }) {
-  const c = active ? '#e94560' : 'rgba(255,255,255,0.3)'
+  const c = active ? 'var(--color-accent)' : 'var(--color-text-dim)'
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <rect x="3" y="4" width="16" height="14" rx="2" stroke={c} strokeWidth="1.5" />
@@ -127,7 +134,7 @@ function MenusIcon({ active }: { active: boolean }) {
 }
 
 function ShoppingIcon({ active }: { active: boolean }) {
-  const c = active ? '#e94560' : 'rgba(255,255,255,0.3)'
+  const c = active ? 'var(--color-accent)' : 'var(--color-text-dim)'
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <path d="M4 5h14l-1.5 9H5.5L4 5z" stroke={c} strokeWidth="1.5" strokeLinejoin="round" />
@@ -140,7 +147,7 @@ function ShoppingIcon({ active }: { active: boolean }) {
 
 function ImportIcon() {
   return (
-    <span style={{ fontSize: 22, fontWeight: 300, lineHeight: 1, color: 'rgba(255,255,255,0.3)' }}>
+    <span style={{ fontSize: 22, fontWeight: 300, lineHeight: 1, color: 'var(--color-text-dim)' }}>
       +
     </span>
   )

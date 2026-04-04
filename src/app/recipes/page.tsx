@@ -21,7 +21,7 @@ const PROTEIN_TYPES: Array<{ value: string; label: string }> = [
 ]
 
 const CATEGORY_ACCENT: Record<string, string> = {
-  all:       '#f0ede8',
+  all:       'var(--color-text)',
   dinner:    '#e94560',
   breakfast: '#f4a261',
   baking:    '#c77dff',
@@ -156,20 +156,20 @@ export default function RecipesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
 
       {/* Sticky header */}
       <div
         className="sticky top-0 z-10 border-b border-white/[0.05] px-5 pt-5 pb-3"
-        style={{ background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(16px)' }}
+        style={{ background: 'color-mix(in srgb, var(--color-bg) 92%, transparent)', backdropFilter: 'blur(16px)' }}
       >
-        <div className="mx-auto max-w-6xl">
+        <div style={{ maxWidth: 900, margin: '0 auto', width: '100%' }}>
 
           {/* Title row */}
           <div className="mb-4">
             <h1
-              className="text-[28px] font-bold leading-none text-[#f0ede8] tracking-tight"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[28px] leading-none tracking-tight"
+              style={{ color: 'var(--color-text)', fontFamily: 'Georgia, serif', fontWeight: 400 }}
             >
               Recipes
             </h1>
@@ -184,24 +184,24 @@ export default function RecipesPage() {
           {/* Desktop search bar */}
           <div className="hidden sm:flex items-center gap-2 mb-4">
             <div style={{ flex: 1, display: 'flex', alignItems: 'center',
-              gap: 8, background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 10, padding: '8px 14px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              gap: 8, background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 12, padding: '8px 14px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search recipes…"
                 style={{ flex: 1, background: 'transparent', border: 'none',
                   outline: 'none', fontSize: 13,
-                  color: '#f0ede8',
+                  color: 'var(--color-text)',
                   fontFamily: 'var(--font-geist-sans)' }}
               />
             </div>
             <button onClick={() => setDrawerOpen(true)}
-              style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10,
-                color: 'rgba(255,255,255,0.5)', display: 'flex',
+              style={{ padding: '8px 12px', background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)', borderRadius: 12,
+                color: 'var(--color-text-dim)', display: 'flex',
                 alignItems: 'center', cursor: 'pointer' }}>
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                 <path d="M2 4h11M4 7.5h7M6 11h3"
@@ -212,20 +212,39 @@ export default function RecipesPage() {
           </div>
 
           {/* Category tabs */}
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+          <div
+            className="hide-scrollbar"
+            style={{
+              display: 'flex',
+              gap: 6,
+              overflowX: 'auto',
+              padding: '0 0 8px',
+              scrollbarWidth: 'none',
+            }}
+          >
             {CATEGORIES.map(cat => {
               const active = activeCategory === cat
-              const accent = CATEGORY_ACCENT[cat]
               return (
                 <button
                   key={cat}
                   onClick={() => { setActiveCategory(cat); if (cat !== 'dinner') setActiveProtein('all') }}
-                  className="shrink-0 rounded-md px-3 py-1 text-[10px] uppercase tracking-[0.08em] border transition-all"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: active ? accent : 'transparent',
-                    borderColor: active ? accent : 'rgba(255,255,255,0.08)',
-                    color: active ? '#0a0a0a' : 'rgba(255,255,255,0.3)',
+                    fontSize: 12,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    borderRadius: 999,
+                    padding: '7px 16px',
+                    minHeight: 32,
+                    border: '1px solid',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                    background: active ? 'var(--color-accent)' : 'transparent',
+                    borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
+                    color: active ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                    fontWeight: active ? 600 : 400,
                   }}
                 >
                   {cat === 'all' ? 'All' : `${CATEGORY_EMOJI[cat]} ${cat}`}
@@ -235,26 +254,47 @@ export default function RecipesPage() {
           </div>
 
           {/* Protein type tabs */}
-          {activeCategory === 'dinner' && <div className="flex gap-1.5 overflow-x-auto pb-0.5 mt-1.5 scrollbar-none">
-            {PROTEIN_TYPES.map(pt => {
-              const active = activeProtein === pt.value
-              return (
-                <button
-                  key={pt.value}
-                  onClick={() => setActiveProtein(pt.value)}
-                  className="shrink-0 rounded-md px-3 py-1 text-[10px] uppercase tracking-[0.08em] border transition-all"
-                  style={{
-                    fontFamily:  'var(--font-geist-mono)',
-                    background:  active ? 'rgba(255,255,255,0.12)' : 'transparent',
-                    borderColor: active ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
-                    color:       active ? 'rgba(255,255,255,0.8)'  : 'rgba(255,255,255,0.3)',
-                  }}
-                >
-                  {pt.label}
-                </button>
-              )
-            })}
-          </div>}
+          {activeCategory === 'dinner' && (
+            <div
+              className="hide-scrollbar"
+              style={{
+                display: 'flex',
+                gap: 6,
+                overflowX: 'auto',
+                padding: '6px 0 8px',
+                scrollbarWidth: 'none',
+              }}
+            >
+              {PROTEIN_TYPES.map(pt => {
+                const active = activeProtein === pt.value
+                return (
+                  <button
+                    key={pt.value}
+                    onClick={() => setActiveProtein(pt.value)}
+                    style={{
+                      fontFamily:  'var(--font-geist-mono)',
+                      fontSize: 12,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      borderRadius: 999,
+                      padding: '7px 16px',
+                      minHeight: 32,
+                      border: '1px solid',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                      background:  active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      borderColor: active ? 'rgba(255,255,255,0.25)' : 'var(--color-border)',
+                      color:       active ? 'rgba(255,255,255,0.8)'  : 'var(--color-text-dim)',
+                    }}
+                  >
+                    {pt.label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* Active filter pills */}
           {filterPills.length > 0 && (
@@ -262,14 +302,15 @@ export default function RecipesPage() {
               {filterPills.map(pill => (
                 <span
                   key={pill.label}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] border border-[#f4a261]/40 text-[#f4a261] bg-[#f4a261]/10"
-                  style={{ fontFamily: 'var(--font-geist-mono)' }}
+                  className="flex items-center gap-1.5 border border-[#f4a261]/40 text-[#f4a261] bg-[#f4a261]/10"
+                  style={{ fontFamily: 'var(--font-geist-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 999, minHeight: 28 }}
                 >
                   {pill.label}
                   <button
                     onClick={pill.onRemove}
                     className="opacity-60 hover:opacity-100 transition-opacity leading-none"
                     aria-label={`Remove ${pill.label} filter`}
+                    style={{ fontSize: 16, padding: '0 2px', lineHeight: 1 }}
                   >
                     ×
                   </button>
@@ -281,7 +322,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipe grid */}
-      <div className="mx-auto max-w-6xl px-5 pt-5 pb-16">
+      <div className="px-5 pt-5 pb-16" style={{ maxWidth: 900, margin: '0 auto', width: '100%' }}>
         {loading ? (
           <div className="flex justify-center pt-20">
             <span
@@ -295,8 +336,8 @@ export default function RecipesPage() {
           allRecipes.length === 0 ? (
             <div className="flex flex-col items-center pt-20 gap-6">
               <h2
-                className="text-[32px] font-bold text-[#f0ede8] tracking-tight"
-                style={{ fontFamily: 'var(--font-geist-sans)' }}
+                className="text-[32px] font-bold tracking-tight"
+                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
               >
                 Your cookbook is empty
               </h2>
@@ -318,7 +359,7 @@ export default function RecipesPage() {
                     className="rounded-xl px-4 py-2.5 text-[12px] border transition-colors hover:border-white/20"
                     style={{
                       fontFamily:  'var(--font-geist-mono)',
-                      background:  'rgba(255,255,255,0.04)',
+                      background:  'var(--color-surface)',
                       borderColor: 'rgba(255,255,255,0.08)',
                       color:       'rgba(255,255,255,0.5)',
                     }}
@@ -329,21 +370,39 @@ export default function RecipesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center pt-20 gap-4">
-              <p
-                className="text-[12px] text-white/30"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
-              >
-                No recipes match your filters
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              padding: '60px 20px', gap: 12, textAlign: 'center',
+            }}>
+              <span style={{ fontSize: 32 }}>🔍</span>
+              <p style={{
+                fontFamily: 'Georgia, serif', fontSize: 18,
+                color: 'var(--color-text)', fontWeight: 400, margin: 0,
+              }}>
+                No recipes match
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-geist-mono)', fontSize: 11,
+                color: 'var(--color-text-dim)',
+                textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0,
+              }}>
+                Try adjusting your filters
               </p>
               <button
-                onClick={() => { setFilters({}); setActiveCategory('all'); setActiveProtein('all') }}
-                className="rounded-xl px-4 py-2 text-[11px] border transition-colors hover:border-white/20"
+                onClick={() => { setFilters({}); setActiveCategory('all'); setActiveProtein('all'); setSearch('') }}
                 style={{
-                  fontFamily:  'var(--font-geist-mono)',
-                  background:  'rgba(255,255,255,0.04)',
-                  borderColor: 'rgba(255,255,255,0.08)',
-                  color:       'rgba(255,255,255,0.4)',
+                  marginTop: 8,
+                  padding: '8px 20px',
+                  borderRadius: 999,
+                  border: '1px solid var(--color-accent)',
+                  background: 'transparent',
+                  color: 'var(--color-accent)',
+                  fontFamily: 'var(--font-geist-mono)',
+                  fontSize: 11,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
                 }}
               >
                 Clear filters
@@ -379,9 +438,9 @@ export default function RecipesPage() {
             height:       48,
             overflow:     'hidden',
             borderRadius: '24px 0 0 24px',
-            borderTop:    searchOpen ? '1.5px solid #5a6b42' : 'none',
-            borderBottom: searchOpen ? '1.5px solid #5a6b42' : 'none',
-            borderLeft:   searchOpen ? '1.5px solid #5a6b42' : 'none',
+            borderTop:    searchOpen ? '1.5px solid var(--color-accent)' : 'none',
+            borderBottom: searchOpen ? '1.5px solid var(--color-accent)' : 'none',
+            borderLeft:   searchOpen ? '1.5px solid var(--color-accent)' : 'none',
             borderRight:  'none',
             background:   '#fff',
             display:      'flex',
@@ -405,7 +464,7 @@ export default function RecipesPage() {
               whiteSpace:    'nowrap',
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6b42" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input
               ref={inputRef}
               value={search}
@@ -460,7 +519,7 @@ export default function RecipesPage() {
               <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
                 <path
                   d="M1 3h10M2.5 6h7M4 9h4"
-                  stroke={filterPills.length > 0 ? '#5a6b42' : 'rgba(90,107,66,0.45)'}
+                  stroke={filterPills.length > 0 ? 'var(--color-accent)' : 'rgba(90,107,66,0.45)'}
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
@@ -477,7 +536,7 @@ export default function RecipesPage() {
             width:          48,
             height:         48,
             flexShrink:     0,
-            background:     '#5a6b42',
+            background:     'var(--color-accent)',
             borderRadius:   searchOpen ? '0 24px 24px 0' : 24,
             display:        'flex',
             alignItems:     'center',

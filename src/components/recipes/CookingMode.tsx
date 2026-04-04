@@ -83,13 +83,13 @@ export default function CookingMode({
   if (done) {
     return (
       <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-[#0a0a0a]"
-        style={{ fontFamily: 'var(--font-geist-sans)' }}
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6"
+        style={{ background: 'var(--color-bg)', fontFamily: 'var(--font-geist-sans)' }}
       >
         <span className="text-[72px]">🍽️</span>
         <h1
-          className="text-[32px] font-bold text-[#f0ede8] text-center px-8"
-          style={{ fontFamily: 'Georgia, serif' }}
+          className="text-[32px] font-bold text-center px-8"
+          style={{ color: 'var(--color-text)', fontFamily: 'Georgia, serif' }}
         >
           Enjoy your meal!
         </h1>
@@ -144,7 +144,7 @@ export default function CookingMode({
               <span style={{
                 fontFamily: 'var(--font-geist-mono)',
                 fontSize: desktop ? 17 : 11,
-                color: '#5a6b42',
+                color: 'var(--color-accent)',
                 flexShrink: 0, marginLeft: 12,
               }}>
                 {formatAmount(ing.amount * scale)} {ing.unit}
@@ -158,7 +158,8 @@ export default function CookingMode({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#0a0a0a] flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: 'var(--color-bg)' }}
       onClick={handleTap}
     >
       {/* ── Top bar ── */}
@@ -172,7 +173,7 @@ export default function CookingMode({
           <div className="h-[3px] w-full rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
             <div
               className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${((step + 1) / total) * 100}%`, background: '#5a6b42' }}
+              style={{ width: `${((step + 1) / total) * 100}%`, background: 'var(--color-accent)' }}
             />
           </div>
 
@@ -223,7 +224,7 @@ export default function CookingMode({
               style={{
                 fontFamily: 'Georgia, serif', fontSize: 28,
                 fontWeight: 400, lineHeight: 1.45,
-                color: '#f0ede8', margin: 0,
+                color: 'var(--color-text)', margin: 0,
               }}
             >
               {currentStep?.instruction}
@@ -272,8 +273,8 @@ export default function CookingMode({
             </p>
 
             <p
-              className="text-[22px] leading-snug text-[#f0ede8] mb-8"
-              style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}
+              className="text-[22px] leading-snug mb-8"
+              style={{ color: 'var(--color-text)', fontFamily: 'Georgia, serif', fontWeight: 400 }}
             >
               {currentStep?.instruction}
             </p>
@@ -311,7 +312,7 @@ export default function CookingMode({
                 width: i === step ? 20 : 6, height: 6,
                 borderRadius: 999,
                 background: i === step
-                  ? '#5a6b42'
+                  ? 'var(--color-accent)'
                   : i < step
                     ? 'rgba(90,107,66,0.4)'
                     : 'rgba(255,255,255,0.1)',
@@ -325,7 +326,7 @@ export default function CookingMode({
             style={{
               fontFamily: 'var(--font-geist-mono)', fontSize: 13,
               color: '#fff',
-              background: '#5a6b42',
+              background: 'var(--color-accent)',
               border: 'none',
               borderRadius: 10, padding: '10px 20px',
               cursor: 'pointer',

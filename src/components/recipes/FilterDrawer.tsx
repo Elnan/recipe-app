@@ -94,37 +94,38 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-40"
+          style={{ background: 'rgba(247,244,239,0.7)', backdropFilter: 'blur(2px)' }}
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-[#111] border-t border-white/[0.06] transition-transform duration-300 ease-out ${
+        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
-        style={{ maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ maxHeight: '85vh', overflowY: 'auto', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-9 h-1 rounded-full bg-white/10" />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
         </div>
 
         <div className="px-5 pt-2 pb-10">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2
-              className="text-[15px] font-semibold text-[#f0ede8]"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[15px] font-semibold"
+              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
             >
               Filters
             </h2>
             {hasFilters && (
               <button
                 onClick={clearAll}
-                className="text-[11px] text-white/40 hover:text-white/70 transition-colors"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
+                className="text-[11px] transition-colors"
+                style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
               >
                 Clear all
               </button>
@@ -184,8 +185,8 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
                     background: filters.min_rating === r ? '#f4a261' : 'transparent',
-                    borderColor: filters.min_rating === r ? '#f4a261' : 'rgba(255,255,255,0.08)',
-                    color: filters.min_rating === r ? '#0a0a0a' : 'rgba(255,255,255,0.4)',
+                    borderColor: filters.min_rating === r ? '#f4a261' : 'var(--color-border)',
+                    color: filters.min_rating === r ? 'var(--color-bg)' : 'var(--color-text-dim)',
                   }}
                 >
                   {'★'.repeat(r)}
@@ -225,8 +226,8 @@ function Section({
   return (
     <div className={last ? 'mb-0' : 'mb-6'}>
       <p
-        className="text-[10px] uppercase tracking-[0.1em] text-white/25 mb-3"
-        style={{ fontFamily: 'var(--font-geist-mono)' }}
+        className="text-[10px] uppercase tracking-[0.1em] mb-3"
+        style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
       >
         {label}
       </p>
@@ -251,8 +252,8 @@ function Chip({
       style={{
         fontFamily: 'var(--font-geist-mono)',
         background: active ? 'rgba(244,162,97,0.15)' : 'transparent',
-        borderColor: active ? '#f4a261' : 'rgba(255,255,255,0.08)',
-        color: active ? '#f4a261' : 'rgba(255,255,255,0.35)',
+        borderColor: active ? '#f4a261' : 'var(--color-border)',
+        color: active ? '#f4a261' : 'var(--color-text-dim)',
       }}
     >
       {label}

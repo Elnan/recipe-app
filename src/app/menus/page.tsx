@@ -177,7 +177,7 @@ export default function MenusPage() {
   // ── List view ──────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', height: '100dvh' }}>
 
       {/* Fixed zone — does not scroll */}
       <div style={{ flexShrink: 0 }}>
@@ -189,8 +189,8 @@ export default function MenusPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1
-                className="text-[28px] font-bold leading-none text-[#f0ede8] tracking-tight"
-                style={{ fontFamily: 'var(--font-geist-sans)' }}
+                className="text-[28px] font-bold leading-none tracking-tight"
+                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
               >
                 Menus
               </h1>
@@ -201,7 +201,7 @@ export default function MenusPage() {
             <button
               onClick={() => { setSelectedMenu(null); setIsEditing(false); setView('builder') }}
               className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em] text-white"
-              style={{ background: '#5a6b42', fontFamily: 'var(--font-geist-mono)' }}
+              style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-geist-mono)' }}
             >
               + New menu
             </button>
@@ -223,10 +223,10 @@ export default function MenusPage() {
                       ? (pColor ? pColor.bg : 'rgba(90,107,66,0.2)')
                       : 'transparent',
                     borderColor: active
-                      ? (pColor ? pColor.color : '#5a6b42')
+                      ? (pColor ? pColor.color : 'var(--color-accent)')
                       : 'rgba(255,255,255,0.08)',
                     color:       active
-                      ? (pColor ? pColor.color : '#5a6b42')
+                      ? (pColor ? pColor.color : 'var(--color-accent)')
                       : 'rgba(255,255,255,0.3)',
                   }}
                 >
@@ -259,7 +259,7 @@ export default function MenusPage() {
                 textAlign:    'left' as const,
                 cursor:       'pointer',
                 padding:      0,
-                background:   'rgba(255,255,255,0.04)',
+                background:   'var(--color-surface)',
                 border:       '1.5px solid rgba(90,107,66,0.5)',
                 borderRadius: 16,
                 overflow:     'hidden',
@@ -300,7 +300,7 @@ export default function MenusPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span
                     style={{
-                      color:        '#f0ede8',
+                      color:        'var(--color-text)',
                       fontSize:     15,
                       fontWeight:   600,
                       fontFamily:   'Georgia, serif',
@@ -333,7 +333,7 @@ export default function MenusPage() {
                   {activeMenu.recipes.slice(0, 4).map(r => (
                     <span
                       key={r.id}
-                      style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     >
                       {r.title}
                     </span>
@@ -426,8 +426,8 @@ function MenuCard({ menu, onClick }: { menu: MenuWithRecipes; onClick: () => voi
     <button
       onClick={onClick}
       style={{
-        background:   'rgba(255,255,255,0.04)',
-        border:       '1px solid rgba(255,255,255,0.07)',
+        background:   'var(--color-surface)',
+        border:       '1px solid var(--color-border)',
         borderRadius: 16,
         overflow:     'hidden',
         cursor:       'pointer',
@@ -460,7 +460,7 @@ function MenuCard({ menu, onClick }: { menu: MenuWithRecipes; onClick: () => voi
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <span
             style={{
-              color:        '#f0ede8',
+              color:        'var(--color-text)',
               fontSize:     15,
               fontWeight:   600,
               fontFamily:   'Georgia, serif',
@@ -481,7 +481,7 @@ function MenuCard({ menu, onClick }: { menu: MenuWithRecipes; onClick: () => voi
           {menu.recipes.slice(0, 4).map(r => (
             <span
               key={r.id}
-              style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
               {r.title}
             </span>

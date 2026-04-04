@@ -74,6 +74,7 @@ function StarRating({ rating }: { rating: number }) {
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   const accent = CATEGORY_ACCENT[recipe.category] ?? CATEGORY_ACCENT.other
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0)
+  const onImage = !!recipe.image_url
 
   const cardRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 })
@@ -125,14 +126,14 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
           ) : recipe.image_icon ? (
             <div
               className="absolute inset-0 flex items-center justify-center"
-              style={{ background: CATEGORY_BG[recipe.category] ?? CATEGORY_BG.other }}
+              style={{ background: 'var(--color-subtle)' }}
             >
               <RecipeIcon icon={recipe.image_icon} color={accent} size={52} />
             </div>
           ) : (
             <div
               className="absolute inset-0 flex items-center justify-center"
-              style={{ background: CATEGORY_BG[recipe.category] ?? CATEGORY_BG.other }}
+              style={{ background: 'var(--color-subtle)' }}
             >
               <span className="text-5xl opacity-25">
                 {CATEGORY_EMOJI[recipe.category]}
@@ -140,20 +141,22 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
             </div>
           )}
 
-          {/* Gradient overlay */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.88) 100%)',
-            }}
-          />
+          {/* Gradient overlay — only on cards with images */}
+          {recipe.image_url && (
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.88) 100%)',
+              }}
+            />
+          )}
 
           {/* Category + cooking method badges — top left */}
           <div className="absolute top-3 left-3 flex items-center gap-[5px]">
             <div
-              className="rounded-[5px] px-[9px] py-[3px] text-[9px] font-medium uppercase tracking-[0.09em] text-[#0a0a0a]"
-              style={{ background: accent, fontFamily: 'var(--font-geist-mono)' }}
+              className="rounded-[5px] px-[9px] py-[3px] text-[9px] font-medium uppercase tracking-[0.09em]"
+              style={{ color: 'var(--color-bg)', background: accent, fontFamily: 'var(--font-geist-mono)' }}
             >
               {CATEGORY_EMOJI[recipe.category]} {recipe.category}
             </div>
@@ -162,10 +165,10 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
                 className="rounded-[5px] px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
                 style={{
                   fontFamily: 'var(--font-geist-mono)',
-                  background: 'rgba(0,0,0,0.55)',
-                  backdropFilter: 'blur(6px)',
-                  borderColor: `${accent}55`,
-                  color: accent,
+                  background: onImage ? 'rgba(0,0,0,0.55)' : 'var(--color-subtle)',
+                  backdropFilter: onImage ? 'blur(6px)' : 'none',
+                  borderColor: onImage ? `${accent}55` : 'var(--color-border)',
+                  color: onImage ? accent : 'var(--color-text-dim)',
                 }}
               >
                 {METHOD_META[recipe.cooking_method]?.label ?? recipe.cooking_method}
@@ -179,9 +182,9 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
               <div
                 className="rounded-[5px] px-[9px] py-[3px] border flex items-center gap-px"
                 style={{
-                  background: 'rgba(0,0,0,0.55)',
-                  backdropFilter: 'blur(6px)',
-                  borderColor: 'rgba(255,255,255,0.15)',
+                  background: onImage ? 'rgba(0,0,0,0.55)' : 'var(--color-subtle)',
+                  backdropFilter: onImage ? 'blur(6px)' : 'none',
+                  borderColor: onImage ? 'rgba(255,255,255,0.15)' : 'var(--color-border)',
                 }}
               >
                 <StarRating rating={recipe.rating} />
@@ -192,10 +195,10 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
                 className="rounded-[5px] px-[9px] py-[3px] text-[9px] tracking-[0.06em] border"
                 style={{
                   fontFamily: 'var(--font-geist-mono)',
-                  background: 'rgba(0,0,0,0.55)',
-                  backdropFilter: 'blur(6px)',
-                  borderColor: `${accent}55`,
-                  color: accent,
+                  background: onImage ? 'rgba(0,0,0,0.55)' : 'var(--color-subtle)',
+                  backdropFilter: onImage ? 'blur(6px)' : 'none',
+                  borderColor: onImage ? `${accent}55` : 'var(--color-border)',
+                  color: onImage ? accent : 'var(--color-text-dim)',
                 }}
               >
                 {recipe.menu_name}
@@ -212,10 +215,10 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
                   className="rounded-[5px] px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
                   style={{
                     fontFamily:     'var(--font-geist-mono)',
-                    background:     'rgba(0,0,0,0.55)',
-                    backdropFilter: 'blur(6px)',
-                    borderColor:    'rgba(255,255,255,0.15)',
-                    color:          'rgba(255,255,255,0.75)',
+                    background:     onImage ? 'rgba(0,0,0,0.55)' : 'var(--color-subtle)',
+                    backdropFilter: onImage ? 'blur(6px)' : 'none',
+                    borderColor:    onImage ? 'rgba(255,255,255,0.15)' : 'var(--color-border)',
+                    color:          onImage ? 'rgba(255,255,255,0.75)' : 'var(--color-text)',
                   }}
                 >
                   {[
@@ -234,9 +237,9 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
                     className="px-[9px] py-[3px] text-[9px] uppercase tracking-[0.07em] border"
                     style={{
                       fontFamily: 'var(--font-geist-mono)',
-                      background: 'transparent',
-                      borderColor: 'rgba(255,255,255,0.18)',
-                      color: 'rgba(255,255,255,0.45)',
+                      background: onImage ? 'transparent' : 'var(--color-subtle)',
+                      borderColor: onImage ? 'rgba(255,255,255,0.18)' : 'var(--color-border)',
+                      color: onImage ? 'rgba(255,255,255,0.45)' : 'var(--color-text-dim)',
                       borderRadius: '20px',
                     }}
                   >
@@ -246,10 +249,11 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
               </div>
             )}
             <h3
-              className="text-[18px] font-bold leading-tight text-white"
+              className="text-[18px] font-bold leading-tight"
               style={{
                 fontFamily: 'var(--font-geist-sans)',
-                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                color: recipe.image_url ? '#fff' : 'var(--color-text)',
+                textShadow: recipe.image_url ? '0 1px 4px rgba(0,0,0,0.5)' : 'none',
               }}
             >
               {recipe.title}

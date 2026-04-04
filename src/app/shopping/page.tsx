@@ -297,7 +297,7 @@ export default function ShoppingPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]" style={{ paddingBottom: panelHeight + 64 }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)', paddingBottom: panelHeight + 64 }}>
 
       {/* Header */}
       <div
@@ -307,8 +307,8 @@ export default function ShoppingPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1
-              className="text-[28px] font-bold leading-none text-[#f0ede8] tracking-tight"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[28px] font-bold leading-none tracking-tight"
+              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
             >
               Shopping
             </h1>
@@ -338,7 +338,7 @@ export default function ShoppingPage() {
               <button
                 onClick={() => setSourceFilter(null)}
                 className="shrink-0 rounded-full px-3 py-1 text-[10px] text-white/50 border border-white/10"
-                style={{ fontFamily: 'var(--font-geist-mono)', background: 'rgba(255,255,255,0.04)' }}
+                style={{ fontFamily: 'var(--font-geist-mono)', background: 'var(--color-surface)' }}
               >
                 Show all
               </button>
@@ -352,7 +352,7 @@ export default function ShoppingPage() {
                   className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'var(--color-surface)',
                   }}
                 >
                   <button
@@ -379,7 +379,7 @@ export default function ShoppingPage() {
                   className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'var(--color-surface)',
                   }}
                 >
                   <button
@@ -413,8 +413,8 @@ export default function ShoppingPage() {
           <div className="flex flex-col items-center pt-20 gap-2">
             <span className="text-3xl text-white/20">✓</span>
             <p
-              className="text-[18px] font-semibold text-[#f0ede8]"
-              style={{ fontFamily: 'var(--font-geist-sans)' }}
+              className="text-[18px] font-semibold"
+              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
             >
               All done!
             </p>
@@ -521,11 +521,11 @@ export default function ShoppingPage() {
                   key={`${s.name}-${i}`}
                   onClick={() => handleAddByName(s.name)}
                   className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                  style={{ background: 'rgba(255,255,255,0.04)' }}
+                  style={{ background: 'var(--color-surface)' }}
                 >
                   <span
-                    className="text-[13px] text-[#f0ede8]"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                    className="text-[13px]"
+                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                   >
                     {s.name}
                   </span>
@@ -567,8 +567,8 @@ export default function ShoppingPage() {
                     blurTimerRef.current = setTimeout(() => { setSearchFocused(false); blurTimerRef.current = null }, 150)
                   }}
                   placeholder="Add an ingredient…"
-                  className="flex-1 py-3 text-[14px] text-[#f0ede8] outline-none bg-transparent placeholder:text-white/20"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  className="flex-1 py-3 text-[14px] outline-none bg-transparent placeholder:text-white/20"
+                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                 />
               </div>
             </form>
@@ -657,8 +657,9 @@ function ItemRow({
       }} />
 
       <span
-        className="flex-1 text-[14px] text-[#f0ede8]"
+        className="flex-1 text-[14px]"
         style={{
+          color:          'var(--color-text)',
           fontFamily:     'var(--font-geist-sans)',
           textDecoration: isChecking ? 'line-through' : 'none',
         }}
@@ -699,8 +700,8 @@ function EditSheet({
       {/* Name + close */}
       <div className="flex items-center justify-between mb-3">
         <span
-          className="text-[15px] font-medium text-[#f0ede8]"
-          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          className="text-[15px] font-medium"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
         >
           {item.name}
         </span>
@@ -723,8 +724,8 @@ function EditSheet({
           <span style={{ fontSize: 14, lineHeight: 1 }}>−</span>
         </button>
         <span
-          className="text-[22px] text-[#f0ede8]"
-          style={{ fontFamily: 'Georgia, serif', minWidth: 24, textAlign: 'center' as const }}
+          className="text-[22px]"
+          style={{ color: 'var(--color-text)', fontFamily: 'Georgia, serif', minWidth: 24, textAlign: 'center' as const }}
         >
           {qty}
         </span>
@@ -803,8 +804,8 @@ function MergeConfirmSheet({
           Merge items
         </p>
         <p
-          className="text-[17px] font-semibold text-[#f0ede8] mb-1"
-          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          className="text-[17px] font-semibold mb-1"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
         >
           Merge {target.name} into {source.name}?
         </p>

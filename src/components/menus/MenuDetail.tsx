@@ -64,7 +64,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
 
   return (
     <>
-      <div style={{ background: '#0a0a0a', minHeight: '100dvh', paddingBottom: 120 }}>
+      <div style={{ background: 'var(--color-bg)', minHeight: '100dvh', paddingBottom: 120 }}>
         {/* Header */}
         <div style={{ padding: '16px 16px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
@@ -126,7 +126,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
             <div style={styles.activeLabel}>This is your current week&apos;s menu</div>
             <button
               onClick={() => onSetActive(true)}
-              style={{ ...styles.primaryBtn, background: '#5a6b42' }}
+              style={{ ...styles.primaryBtn, background: 'var(--color-accent)' }}
             >
               Add to shopping list
             </button>
@@ -162,7 +162,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '10px 18px', color: '#f0ede8', fontSize: 13, fontFamily: 'var(--font-geist-sans)', zIndex: 100, whiteSpace: 'nowrap', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '10px 18px', color: 'var(--color-text)', fontSize: 13, fontFamily: 'var(--font-geist-sans)', zIndex: 100, whiteSpace: 'nowrap', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
           {toast}
         </div>
       )}
@@ -228,7 +228,7 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {totalTime > 0 && (
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>⏱ {totalTime}m</span>
+            <span style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>⏱ {totalTime}m</span>
           )}
         </div>
       </div>
@@ -259,11 +259,11 @@ const styles = {
   editBtn:      { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 16px', color: 'rgba(255,255,255,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0, marginTop: 4 } as React.CSSProperties,
   activeBadge:  { background: 'rgba(82,183,136,0.15)', border: '1px solid rgba(82,183,136,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#52b788', fontFamily: 'var(--font-geist-mono)', letterSpacing: '0.04em' } as React.CSSProperties,
   weekBadge:    { background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
-  recipeRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px' } as React.CSSProperties,
+  recipeRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '12px 14px' } as React.CSSProperties,
   deleteBtn:    { width: '100%', background: 'transparent', border: '1px solid rgba(233,69,96,0.2)', borderRadius: 12, padding: 14, color: 'rgba(233,69,96,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  stickyBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px 28px', background: 'linear-gradient(to top, #0a0a0a 80%, transparent)', display: 'flex', flexDirection: 'column' as const, gap: 8 } as React.CSSProperties,
+  stickyBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px 28px', background: 'linear-gradient(to top, var(--color-bg) 80%, transparent)', display: 'flex', flexDirection: 'column' as const, gap: 8 } as React.CSSProperties,
   activeLabel:  { color: '#52b788', fontSize: 13, fontFamily: 'var(--font-geist-sans)', textAlign: 'center' as const, margin: 0 } as React.CSSProperties,
-  primaryBtn:   { width: '100%', padding: 14, background: '#5a6b42', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  primaryBtn:   { width: '100%', padding: 14, background: 'var(--color-accent)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   ghostBtn:     { width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   sheetTitle:   { color: '#fff', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-geist-sans)', margin: 0 } as React.CSSProperties,
   sheetBody:    { color: 'rgba(255,255,255,0.45)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: '8px 0 0' } as React.CSSProperties,

@@ -45,8 +45,8 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
       {/* Title + meta */}
       <div className="mb-4">
         <h2
-          className="text-[20px] font-bold leading-tight text-[#f0ede8] mb-1"
-          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          className="text-[20px] font-bold leading-tight mb-1"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
         >
           {recipe.title}
         </h2>
@@ -87,7 +87,7 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
       </div>
 
       {/* Tab switcher */}
-      <div className="flex gap-1 rounded-xl bg-white/[0.04] p-1 mb-4">
+      <div className="flex gap-1 rounded-xl p-1 mb-4" style={{ background: 'var(--color-surface)' }}>
         {(['ingredients', 'steps'] as const).map(tab => (
           <button
             key={tab}
@@ -118,8 +118,8 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
                 style={{ background: 'rgba(255,255,255,0.03)' }}
               >
                 <span
-                  className="text-[13px] text-[#f0ede8]"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  className="text-[13px]"
+                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                 >
                   {ing.name}
                   {ing.notes && (
@@ -152,8 +152,8 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
                   {String(step.order).padStart(2, '0')}
                 </span>
                 <p
-                  className="text-[13px] leading-snug text-[#f0ede8]"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  className="text-[13px] leading-snug"
+                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                 >
                   {step.instruction}
                 </p>
