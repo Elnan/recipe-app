@@ -26,9 +26,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var stored = localStorage.getItem('theme');
+              if (stored === 'light' || stored === 'dark') {
+                document.documentElement.setAttribute('data-theme', stored);
+              }
+            } catch(e) {}
+          })();
+        ` }} />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="min-h-full flex flex-col pb-20">
