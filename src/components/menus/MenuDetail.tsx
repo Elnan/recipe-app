@@ -20,6 +20,13 @@ const PROTEIN_LABEL: Record<ProteinType, string> = {
   vegetar: 'Vegetar',
 }
 
+const PROTEIN_COLORS: Record<ProteinType, { color: string; bg: string }> = {
+  kjott:   { color: '#c47a7a', bg: 'rgba(140,58,58,0.15)' },
+  kylling: { color: '#c4a96a', bg: 'rgba(140,122,78,0.15)' },
+  fisk:    { color: '#7aaac4', bg: 'rgba(90,122,140,0.15)' },
+  vegetar: { color: '#7ab88a', bg: 'rgba(74,124,89,0.15)' },
+}
+
 export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive }: Props) {
   const [showActiveSheet, setShowActiveSheet] = useState(false)
   const [showDeleteSheet, setShowDeleteSheet] = useState(false)
@@ -68,7 +75,19 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
                   <span style={styles.activeBadge}>● Active</span>
                 )}
                 {pt && (
-                  <span style={styles.proteinBadge}>{PROTEIN_LABEL[pt]}</span>
+                  <span style={{
+                    background:      PROTEIN_COLORS[pt].bg,
+                    border:          `1px solid ${PROTEIN_COLORS[pt].color}`,
+                    borderRadius:    6,
+                    padding:         '3px 8px',
+                    fontSize:        11,
+                    color:           PROTEIN_COLORS[pt].color,
+                    fontFamily:      'var(--font-geist-mono)',
+                    textTransform:   'uppercase' as const,
+                    letterSpacing:   '0.06em',
+                  }}>
+                    {PROTEIN_LABEL[pt]}
+                  </span>
                 )}
                 {menu.week_number != null && (
                   <span style={styles.weekBadge}>Week {menu.week_number}{menu.year ? ` · ${menu.year}` : ''}</span>
@@ -107,7 +126,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
             <div style={styles.activeLabel}>This is your current week&apos;s menu</div>
             <button
               onClick={() => onSetActive(true)}
-              style={{ ...styles.primaryBtn, background: 'rgba(82,183,136,0.15)', border: '1px solid rgba(82,183,136,0.3)', color: '#52b788' }}
+              style={{ ...styles.primaryBtn, background: '#5a6b42' }}
             >
               Add to shopping list
             </button>
@@ -174,6 +193,9 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
 
 function RecipeRow({ recipe }: { recipe: Recipe }) {
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0)
+  const pt = recipe.protein_type as ProteinType | undefined
+  const pColor = pt ? PROTEIN_COLORS[pt] : null
+
   return (
     <div style={styles.recipeRow}>
       <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#1a0508' }}>
@@ -183,15 +205,30 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
         }
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {recipe.title}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+          <span style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
+            {recipe.title}
+          </span>
+          {pt && pColor && (
+            <span style={{
+              background:    pColor.bg,
+              border:        `1px solid ${pColor.color}`,
+              borderRadius:  5,
+              padding:       '2px 7px',
+              fontSize:      9,
+              color:         pColor.color,
+              fontFamily:    'var(--font-geist-mono)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              flexShrink:    0,
+            }}>
+              {PROTEIN_LABEL[pt]}
+            </span>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 3 }}>
+        <div style={{ display: 'flex', gap: 10 }}>
           {totalTime > 0 && (
             <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>⏱ {totalTime}m</span>
-          )}
-          {recipe.cuisine && (
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>{recipe.cuisine}</span>
           )}
         </div>
       </div>
@@ -202,14 +239,11 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
 function BottomSheet({ children, onDismiss }: { children: React.ReactNode; onDismiss: () => void }) {
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onDismiss}
         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
       />
-      {/* Sheet */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#141414', borderTop: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px' }}>
-        {/* Handle */}
         <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 20px' }} />
         {children}
       </div>
@@ -224,13 +258,12 @@ const styles = {
   backBtn:      { color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
   editBtn:      { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 16px', color: 'rgba(255,255,255,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0, marginTop: 4 } as React.CSSProperties,
   activeBadge:  { background: 'rgba(82,183,136,0.15)', border: '1px solid rgba(82,183,136,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#52b788', fontFamily: 'var(--font-geist-mono)', letterSpacing: '0.04em' } as React.CSSProperties,
-  proteinBadge: { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-geist-mono)', textTransform: 'uppercase' as const, letterSpacing: '0.06em' } as React.CSSProperties,
   weekBadge:    { background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
   recipeRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px' } as React.CSSProperties,
   deleteBtn:    { width: '100%', background: 'transparent', border: '1px solid rgba(233,69,96,0.2)', borderRadius: 12, padding: 14, color: 'rgba(233,69,96,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   stickyBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px 28px', background: 'linear-gradient(to top, #0a0a0a 80%, transparent)', display: 'flex', flexDirection: 'column' as const, gap: 8 } as React.CSSProperties,
   activeLabel:  { color: '#52b788', fontSize: 13, fontFamily: 'var(--font-geist-sans)', textAlign: 'center' as const, margin: 0 } as React.CSSProperties,
-  primaryBtn:   { width: '100%', padding: 14, background: '#e94560', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  primaryBtn:   { width: '100%', padding: 14, background: '#5a6b42', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   ghostBtn:     { width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   sheetTitle:   { color: '#fff', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-geist-sans)', margin: 0 } as React.CSSProperties,
   sheetBody:    { color: 'rgba(255,255,255,0.45)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: '8px 0 0' } as React.CSSProperties,

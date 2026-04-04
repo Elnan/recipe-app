@@ -7,6 +7,7 @@ import {
   STORE_SECTION_ORDER,
   STORE_SECTION_META,
   SHOPPING_UNITS,
+  getIngredientPreset,
   getIngredientPresetWithDB,
   INGREDIENT_SECTION_MAP,
 } from '../../../lib/store-sections'
@@ -14,21 +15,46 @@ import type { ShoppingListItem } from '../../../lib/shopping'
 import type { StoreSection } from '../../../lib/store-sections'
 import type { Recipe, MenuWithRecipes } from '../../../types/recipe'
 
+const SECTION_COLORS: Record<StoreSection, string> = {
+  produce:    '#4a7c59',
+  meat:       '#8c3a3a',
+  pålegg:     '#8c7a4e',
+  bread:      '#8c6a3a',
+  frozen:     '#4e6a8c',
+  pantry:     '#8c7a4e',
+  condiments: '#8c6a3a',
+  dairy:      '#5a7a8c',
+  drinks:     '#4e8c7a',
+  snacks:     '#8c6a3a',
+  other:      '#6a6a6a',
+}
+
 type RemovedItem = Pick<ShoppingListItem, 'name' | 'amount' | 'unit' | 'store_section'>
 
 export default function ShoppingPage() {
   const [items, setItems]                     = useState<ShoppingListItem[]>([])
   const [loading, setLoading]                 = useState(true)
-  const [selectedId, setSelectedId]           = useState<string | null>(null)
-  const [recentlyRemoved, setRecentlyRemoved] = useState<RemovedItem[]>([])
   const [searchQuery, setSearchQuery]         = useState('')
   const [recipes, setRecipes]                 = useState<Recipe[]>([])
   const [menus, setMenus]                     = useState<MenuWithRecipes[]>([])
-  const [panelHeight, setPanelHeight]         = useState(0)
+  const [recentlyRemoved, setRecentlyRemoved] = useState<RemovedItem[]>([])
+
+  const [checking, setChecking]               = useState<Set<string>>(new Set())
+  const checkingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const [showSources, setShowSources]         = useState(false)
+  const [sourceFilter, setSourceFilter]       = useState<{ type: 'recipe' | 'menu'; id: string } | null>(null)
+
+  const [editingItem, setEditingItem]         = useState<ShoppingListItem | null>(null)
+
   const [mergeSourceId, setMergeSourceId]     = useState<string | null>(null)
   const [mergeTargetId, setMergeTargetId]     = useState<string | null>(null)
 
-  const panelRef = useRef<HTMLDivElement>(null)
+  const [searchFocused, setSearchFocused]     = useState(false)
+  const [panelHeight, setPanelHeight]         = useState(0)
+  const panelRef    = useRef<HTMLDivElement>(null)
+  const inputRef    = useRef<HTMLInputElement>(null)
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -36,7 +62,33 @@ export default function ShoppingPage() {
       getRecipes(),
       getMenus(),
     ]).then(([shoppingItems, recipeList, menuList]) => {
-      setItems(shoppingItems)
+      const seen = new Map<string, ShoppingListItem>()
+      const dupeIds: string[] = []
+      for (const item of shoppingItems) {
+        const key = item.name.toLowerCase()
+        const existing = seen.get(key)
+        if (existing) {
+          existing.quantity = (existing.quantity ?? 1) + (item.quantity ?? 1)
+          dupeIds.push(item.id)
+        } else {
+          seen.set(key, { ...item })
+        }
+      }
+      const deduped = [...seen.values()]
+      setItems(deduped)
+      for (const id of dupeIds) {
+        fetch(`/api/shopping/${id}`, { method: 'DELETE' })
+      }
+      for (const item of deduped) {
+        const original = shoppingItems.find(i => i.id === item.id)
+        if (original && original.quantity !== item.quantity) {
+          fetch(`/api/shopping/${item.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: item.quantity }),
+          })
+        }
+      }
       setRecipes(recipeList)
       setMenus(menuList)
     }).finally(() => setLoading(false))
@@ -52,42 +104,84 @@ export default function ShoppingPage() {
     return () => observer.disconnect()
   }, [])
 
-  const selectedItem   = items.find(i => i.id === selectedId)   ?? null
-  const mergeSource    = items.find(i => i.id === mergeSourceId) ?? null
-  const mergeTarget    = items.find(i => i.id === mergeTargetId) ?? null
+  const mergeSource = items.find(i => i.id === mergeSourceId) ?? null
+  const mergeTarget = items.find(i => i.id === mergeTargetId) ?? null
 
-  // ── Remove ────────────────────────────────────────────────────────────────
-  function handleRemove(item: ShoppingListItem) {
-    setItems(prev => prev.filter(i => i.id !== item.id))
-    if (selectedId === item.id) setSelectedId(null)
-    setRecentlyRemoved(prev =>
-      [{ name: item.name, amount: item.amount, unit: item.unit, store_section: item.store_section },
-        ...prev].slice(0, 9),
-    )
-    fetch(`/api/shopping/${item.id}`, { method: 'DELETE' })
+  // ── Check off ─────────────────────────────────────────────────────────────
+  function handleCheckOff(item: ShoppingListItem) {
+    if (checking.has(item.id)) {
+      const timer = checkingTimers.current.get(item.id)
+      if (timer) clearTimeout(timer)
+      checkingTimers.current.delete(item.id)
+      setChecking(prev => { const next = new Set(prev); next.delete(item.id); return next })
+      return
+    }
+
+    setChecking(prev => new Set(prev).add(item.id))
+    const timer = setTimeout(() => {
+      setItems(prev => prev.filter(i => i.id !== item.id))
+      setRecentlyRemoved(prev =>
+        [{ name: item.name, amount: item.amount, unit: item.unit, store_section: item.store_section },
+          ...prev].slice(0, 9),
+      )
+      checkingTimers.current.delete(item.id)
+      setChecking(prev => { const next = new Set(prev); next.delete(item.id); return next })
+      fetch(`/api/shopping/${item.id}`, { method: 'DELETE' })
+    }, 2000)
+    checkingTimers.current.set(item.id, timer)
   }
 
-  // ── Add from tile / search ────────────────────────────────────────────────
-  async function handleAddByName(name: string) {
-    const preset  = await getIngredientPresetWithDB(name)
-    const payload = {
-      name,
-      amount:        preset.amount,
-      unit:          preset.unit,
-      store_section: preset.section,
-      is_manual:     true,
+  // ── Item tap ──────────────────────────────────────────────────────────────
+  function handleItemTap(item: ShoppingListItem) {
+    if (mergeSourceId) {
+      if (item.id !== mergeSourceId) setMergeTargetId(item.id)
+      return
     }
-    const tempId  = `temp-${Date.now()}`
+    handleCheckOff(item)
+  }
+
+  // ── Add from search ───────────────────────────────────────────────────────
+  async function handleAddByName(name: string) {
+    if (editingItem && editingItem.name.toLowerCase() === name.toLowerCase()) {
+      const newQty = (editingItem.quantity ?? 1) + 1
+      handlePatch(editingItem.id, { quantity: newQty })
+      setSearchQuery('')
+      focusInput()
+      return
+    }
+
+    const existingItem = items.find(i => i.name.toLowerCase() === name.toLowerCase())
+    if (existingItem) {
+      const newQty = (existingItem.quantity ?? 1) + 1
+      handlePatch(existingItem.id, { quantity: newQty })
+      setEditingItem({ ...existingItem, quantity: newQty })
+      setSearchQuery('')
+      focusInput()
+      return
+    }
+
+    const syncPreset = getIngredientPreset(name)
+    const tempId     = `temp-${Date.now()}`
     const tempItem: ShoppingListItem = {
       id: tempId, created_at: new Date().toISOString(),
       notes: null, source_recipe_id: null, source_menu_id: null,
-      quantity: 1,
-      ...payload,
+      quantity: 1, name,
+      amount: syncPreset.amount, unit: syncPreset.unit,
+      store_section: syncPreset.section, is_manual: true,
     }
     setItems(prev => [...prev, tempItem])
-    setSelectedId(tempId)
+    setEditingItem(tempItem)
     setSearchQuery('')
+    focusInput()
 
+    const dbPreset = await getIngredientPresetWithDB(name)
+    if (dbPreset.section !== syncPreset.section || dbPreset.amount !== syncPreset.amount || dbPreset.unit !== syncPreset.unit) {
+      const refinement = { amount: dbPreset.amount, unit: dbPreset.unit, store_section: dbPreset.section }
+      setItems(prev => prev.map(i => i.id === tempId ? { ...i, ...refinement } : i))
+      setEditingItem(prev => prev?.id === tempId ? { ...prev, ...refinement } : prev)
+    }
+
+    const payload = { name, amount: dbPreset.amount, unit: dbPreset.unit, store_section: dbPreset.section, is_manual: true }
     const res = await fetch('/api/shopping', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -96,11 +190,17 @@ export default function ShoppingPage() {
     if (res.ok) {
       const { item: created } = await res.json() as { item: ShoppingListItem }
       setItems(prev => prev.map(i => i.id === tempId ? created : i))
-      setSelectedId(created.id)
+      setEditingItem(prev => prev?.id === tempId ? created : prev)
     } else {
       setItems(prev => prev.filter(i => i.id !== tempId))
-      setSelectedId(null)
+      setEditingItem(null)
     }
+  }
+
+  function focusInput() {
+    if (blurTimerRef.current) { clearTimeout(blurTimerRef.current); blurTimerRef.current = null }
+    setSearchFocused(true)
+    setTimeout(() => inputRef.current?.focus(), 50)
   }
 
   // ── Patch ─────────────────────────────────────────────────────────────────
@@ -109,6 +209,7 @@ export default function ShoppingPage() {
     patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section' | 'quantity'>>,
   ) {
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...patch } : i))
+    setEditingItem(prev => prev?.id === id ? { ...prev, ...patch } : prev)
     if (id.startsWith('temp-')) return
     fetch(`/api/shopping/${id}`, {
       method:  'PATCH',
@@ -129,39 +230,25 @@ export default function ShoppingPage() {
 
   // ── Remove source ─────────────────────────────────────────────────────────
   function handleRemoveSource(field: 'recipe_id' | 'menu_id', id: string) {
+    if (!confirm('Remove all items from this source?')) return
     if (field === 'recipe_id') setItems(prev => prev.filter(i => i.source_recipe_id !== id))
     else                       setItems(prev => prev.filter(i => i.source_menu_id   !== id))
     fetch(`/api/shopping/source?${field}=${id}`, { method: 'DELETE' })
-  }
-
-  // ── Clear all ─────────────────────────────────────────────────────────────
-  function handleClearAll() {
-    if (!confirm('Clear the entire shopping list?')) return
-    setItems([])
-    setSelectedId(null)
-    fetch('/api/shopping/clear', { method: 'POST' })
+    if (sourceFilter?.id === id) setSourceFilter(null)
   }
 
   // ── Merge ─────────────────────────────────────────────────────────────────
   function handleLongPress(item: ShoppingListItem) {
-    setSelectedId(null)
     setMergeSourceId(item.id)
     setMergeTargetId(null)
-  }
-
-  function handleTileSelect(item: ShoppingListItem) {
-    if (mergeSourceId && item.id !== mergeSourceId) {
-      setMergeTargetId(item.id)
-    } else {
-      setSelectedId(item.id === selectedId ? null : item.id)
-    }
   }
 
   function handleMergeConfirm() {
     if (!mergeSource || !mergeTarget) return
     const combined = (mergeSource.amount ?? 0) + (mergeTarget.amount ?? 0)
     handlePatch(mergeSource.id, { amount: combined })
-    handleRemove(mergeTarget)
+    setItems(prev => prev.filter(i => i.id !== mergeTarget.id))
+    fetch(`/api/shopping/${mergeTarget.id}`, { method: 'DELETE' })
     setMergeSourceId(null)
     setMergeTargetId(null)
   }
@@ -171,11 +258,21 @@ export default function ShoppingPage() {
     setMergeTargetId(null)
   }
 
-  // ── Source pills ──────────────────────────────────────────────────────────
+  // ── Source data ───────────────────────────────────────────────────────────
   const recipeSourceIds = [...new Set(items.flatMap(i => i.source_recipe_id ? [i.source_recipe_id] : []))]
   const menuSourceIds   = [...new Set(items.flatMap(i => i.source_menu_id   ? [i.source_menu_id]   : []))]
+  const hasSources      = recipeSourceIds.length > 0 || menuSourceIds.length > 0
 
-  // ── Suggestion tiles ──────────────────────────────────────────────────────
+  // ── Filtered items ────────────────────────────────────────────────────────
+  const visibleItems = sourceFilter
+    ? items.filter(i =>
+        sourceFilter.type === 'recipe'
+          ? i.source_recipe_id === sourceFilter.id
+          : i.source_menu_id === sourceFilter.id
+      )
+    : items
+
+  // ── Suggestions ───────────────────────────────────────────────────────────
   const q = searchQuery.trim().toLowerCase()
   const suggestions: RemovedItem[] = q
     ? (() => {
@@ -183,17 +280,19 @@ export default function ShoppingPage() {
         const fromMap = Object.keys(INGREDIENT_SECTION_MAP)
           .filter(k => k.includes(q) && !fromRecent.some(r => r.name.toLowerCase() === k))
           .slice(0, 9 - fromRecent.length)
-          .map(k => {
-            const p = INGREDIENT_SECTION_MAP[k]
-            return { name: k, amount: 1 as number | null, unit: 'stk' as string | null, store_section: (p ?? 'other') as StoreSection }
-          })
+          .map(k => ({
+            name: k,
+            amount: 1 as number | null,
+            unit: 'stk' as string | null,
+            store_section: (INGREDIENT_SECTION_MAP[k] ?? 'other') as StoreSection,
+          }))
         return [...fromRecent, ...fromMap].slice(0, 9)
       })()
     : recentlyRemoved
 
   // ── Grouped ───────────────────────────────────────────────────────────────
   const grouped = STORE_SECTION_ORDER.reduce<Record<StoreSection, ShoppingListItem[]>>(
-    (acc, section) => { acc[section] = items.filter(i => i.store_section === section); return acc },
+    (acc, section) => { acc[section] = visibleItems.filter(i => i.store_section === section); return acc },
     {} as Record<StoreSection, ShoppingListItem[]>,
   )
 
@@ -217,46 +316,85 @@ export default function ShoppingPage() {
               {loading ? '…' : `${items.length} item${items.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          {items.length > 0 && (
+          {hasSources && (
             <button
-              onClick={handleClearAll}
-              className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em] border border-white/10 text-white/40"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              onClick={() => setShowSources(s => !s)}
+              className="rounded-lg px-3 py-1.5 text-[11px] tracking-[0.04em] border text-white/40"
+              style={{
+                fontFamily:  'var(--font-geist-mono)',
+                borderColor: showSources ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.10)',
+                background:  showSources ? 'rgba(255,255,255,0.08)' : 'transparent',
+              }}
             >
-              Clear all
+              Sources
             </button>
           )}
         </div>
 
-        {/* Source pills */}
-        {(recipeSourceIds.length > 0 || menuSourceIds.length > 0) && (
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-0.5 scrollbar-none">
+        {/* Source pills — toggled */}
+        {showSources && (
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {sourceFilter && (
+              <button
+                onClick={() => setSourceFilter(null)}
+                className="shrink-0 rounded-full px-3 py-1 text-[10px] text-white/50 border border-white/10"
+                style={{ fontFamily: 'var(--font-geist-mono)', background: 'rgba(255,255,255,0.04)' }}
+              >
+                Show all
+              </button>
+            )}
             {recipeSourceIds.map(id => {
-              const recipe = recipes.find(r => r.id === id)
+              const recipe     = recipes.find(r => r.id === id)
+              const isFiltered = sourceFilter?.type === 'recipe' && sourceFilter.id === id
               return (
-                <button
+                <div
                   key={id}
-                  onClick={() => handleRemoveSource('recipe_id', id)}
-                  className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] text-white/50 border border-white/10"
-                  style={{ fontFamily: 'var(--font-geist-mono)', background: 'rgba(255,255,255,0.04)' }}
+                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
+                  style={{
+                    fontFamily: 'var(--font-geist-mono)',
+                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                  }}
                 >
-                  🍽️ {recipe?.title ?? 'Recipe'}
-                  <span className="text-white/25 ml-0.5">✕</span>
-                </button>
+                  <button
+                    onClick={() => setSourceFilter(isFiltered ? null : { type: 'recipe', id })}
+                    className="text-[10px] text-white/50"
+                  >
+                    🍽️ {recipe?.title ?? 'Recipe'}
+                  </button>
+                  <button
+                    onClick={() => handleRemoveSource('recipe_id', id)}
+                    className="text-[9px] text-white/25 ml-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
               )
             })}
             {menuSourceIds.map(id => {
-              const menu = menus.find(m => m.id === id)
+              const menu       = menus.find(m => m.id === id)
+              const isFiltered = sourceFilter?.type === 'menu' && sourceFilter.id === id
               return (
-                <button
+                <div
                   key={id}
-                  onClick={() => handleRemoveSource('menu_id', id)}
-                  className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] text-white/50 border border-white/10"
-                  style={{ fontFamily: 'var(--font-geist-mono)', background: 'rgba(255,255,255,0.04)' }}
+                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
+                  style={{
+                    fontFamily: 'var(--font-geist-mono)',
+                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                  }}
                 >
-                  📅 {menu?.name ?? 'Menu'}
-                  <span className="text-white/25 ml-0.5">✕</span>
-                </button>
+                  <button
+                    onClick={() => setSourceFilter(isFiltered ? null : { type: 'menu', id })}
+                    className="text-[10px] text-white/50"
+                  >
+                    📅 {menu?.name ?? 'Menu'}
+                  </button>
+                  <button
+                    onClick={() => handleRemoveSource('menu_id', id)}
+                    className="text-[9px] text-white/25 ml-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -264,45 +402,56 @@ export default function ShoppingPage() {
       </div>
 
       {/* Item list */}
-      <div className="px-4 pt-4">
+      <div className="px-5 pt-4">
         {loading ? (
           <div className="flex justify-center pt-20">
-            <span className="text-[11px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>Loading…</span>
+            <span className="text-[11px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+              Loading…
+            </span>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center pt-20 gap-3">
-            <span className="text-4xl">🛒</span>
-            <p className="text-[12px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
-              Search below to add items
+          <div className="flex flex-col items-center pt-20 gap-2">
+            <span className="text-3xl text-white/20">✓</span>
+            <p
+              className="text-[18px] font-semibold text-[#f0ede8]"
+              style={{ fontFamily: 'var(--font-geist-sans)' }}
+            >
+              All done!
+            </p>
+            <p
+              className="text-[10px] uppercase tracking-[0.08em] text-white/20"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
+            >
+              Your list is empty
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5">
             {STORE_SECTION_ORDER.map(section => {
               const sectionItems = grouped[section]
               if (sectionItems.length === 0) return null
-              const meta = STORE_SECTION_META[section]
+              const color = SECTION_COLORS[section]
+              const meta  = STORE_SECTION_META[section]
               return (
                 <div key={section}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-base">{meta.emoji}</span>
+                  <div className="flex items-center gap-2.5 mb-1 pl-1">
+                    <div style={{ width: 3, height: 16, borderRadius: 2, background: color }} />
                     <span
-                      className="text-[11px] uppercase tracking-[0.08em] text-white/30"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="text-[10px] uppercase tracking-[0.08em]"
+                      style={{ fontFamily: 'var(--font-geist-mono)', color }}
                     >
                       {meta.label}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col">
                     {sectionItems.map(item => (
-                      <ItemTile
+                      <ItemRow
                         key={item.id}
                         item={item}
-                        selected={item.id === selectedId}
+                        isChecking={checking.has(item.id)}
                         isMergeSource={item.id === mergeSourceId}
                         isMergeMode={mergeSourceId !== null}
-                        onSelect={() => handleTileSelect(item)}
-                        onRemove={() => handleRemove(item)}
+                        onTap={() => handleItemTap(item)}
                         onLongPress={() => handleLongPress(item)}
                       />
                     ))}
@@ -339,43 +488,60 @@ export default function ShoppingPage() {
           </div>
         )}
 
-        {/* Zone 1: Edit zone */}
-        {selectedItem && !mergeSourceId && (
-          <EditZone
-            item={selectedItem}
-            onPatch={patch => handlePatch(selectedItem.id, patch)}
-            onRemove={() => handleRemove(selectedItem)}
+        {/* Edit sheet */}
+        {editingItem && !mergeSourceId && (
+          <EditSheet
+            item={editingItem}
+            onPatch={patch => handlePatch(editingItem.id, patch)}
+            onClose={() => setEditingItem(null)}
           />
         )}
 
-        {/* Zone 2: Suggestion tiles */}
-        {suggestions.length > 0 && !mergeSourceId && (
-          <div className="flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none">
-            {suggestions.map((s, i) => (
-              <button
-                key={`${s.name}-${i}`}
-                onClick={() => handleAddByName(s.name)}
-                className="shrink-0 rounded-xl px-3 py-2 text-left"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}
-              >
-                <div
-                  className="text-[13px] text-[#f0ede8] whitespace-nowrap"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
-                >
-                  {s.name}
-                </div>
-                <div
-                  className="text-[10px] text-white/30 whitespace-nowrap"
+        {/* Suggestions */}
+        {(() => {
+          const hasQuery       = searchQuery.trim().length > 0
+          const showRecent     = !hasQuery && recentlyRemoved.length > 0 && searchFocused
+          const showSearch     = hasQuery && suggestions.length > 0 && searchFocused
+          if ((!showRecent && !showSearch) || mergeSourceId) return null
+          const displayItems   = showRecent
+            ? recentlyRemoved.slice(0, 2)
+            : suggestions.slice(0, 5)
+          return (
+            <div className="px-4 py-2 flex flex-col gap-0.5">
+              {showRecent && (
+                <span
+                  className="text-[9px] uppercase tracking-[0.08em] text-white/20 px-3 pb-1"
                   style={{ fontFamily: 'var(--font-geist-mono)' }}
                 >
-                  {s.amount} {s.unit}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                  Recent
+                </span>
+              )}
+              {displayItems.map((s, i) => (
+                <button
+                  key={`${s.name}-${i}`}
+                  onClick={() => handleAddByName(s.name)}
+                  className="flex items-center justify-between rounded-lg px-3 py-2.5"
+                  style={{ background: 'rgba(255,255,255,0.04)' }}
+                >
+                  <span
+                    className="text-[13px] text-[#f0ede8]"
+                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  >
+                    {s.name}
+                  </span>
+                  <span
+                    className="text-[10px]"
+                    style={{ fontFamily: 'var(--font-geist-mono)', color: SECTION_COLORS[s.store_section] }}
+                  >
+                    {STORE_SECTION_META[s.store_section].label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )
+        })()}
 
-        {/* Zone 3: Search bar */}
+        {/* Search bar */}
         {!mergeSourceId && (
           <div className="px-4 py-3">
             <form
@@ -384,17 +550,27 @@ export default function ShoppingPage() {
                 if (searchQuery.trim()) handleAddByName(searchQuery.trim())
               }}
             >
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search or type an ingredient…"
-                className="w-full rounded-xl px-4 py-3 text-[14px] text-[#f0ede8] outline-none"
-                style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border:     '1px solid rgba(255,255,255,0.1)',
-                  fontFamily: 'var(--font-geist-sans)',
-                }}
-              />
+              <div
+                className="flex items-center rounded-xl px-3"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <span className="text-[16px] text-white/30 mr-2 leading-none">+</span>
+                <input
+                  ref={inputRef}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (blurTimerRef.current) { clearTimeout(blurTimerRef.current); blurTimerRef.current = null }
+                    setSearchFocused(true)
+                  }}
+                  onBlur={() => {
+                    blurTimerRef.current = setTimeout(() => { setSearchFocused(false); blurTimerRef.current = null }, 150)
+                  }}
+                  placeholder="Add an ingredient…"
+                  className="flex-1 py-3 text-[14px] text-[#f0ede8] outline-none bg-transparent placeholder:text-white/20"
+                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                />
+              </div>
             </form>
           </div>
         )}
@@ -413,158 +589,187 @@ export default function ShoppingPage() {
   )
 }
 
-// ── ItemTile ──────────────────────────────────────────────────────────────────
+// ── ItemRow ──────────────────────────────────────────────────────────────────
 
-function ItemTile({
+function ItemRow({
   item,
-  selected,
+  isChecking,
   isMergeSource,
   isMergeMode,
-  onSelect,
-  onRemove,
+  onTap,
   onLongPress,
 }: {
   item:          ShoppingListItem
-  selected:      boolean
+  isChecking:    boolean
   isMergeSource: boolean
   isMergeMode:   boolean
-  onSelect:      () => void
-  onRemove:      () => void
+  onTap:         () => void
   onLongPress:   () => void
 }) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressedRef = useRef(false)
 
   function startLongPress() {
-    timerRef.current = setTimeout(() => { onLongPress() }, 500)
+    longPressedRef.current = false
+    timerRef.current = setTimeout(() => {
+      longPressedRef.current = true
+      onLongPress()
+    }, 500)
   }
 
   function cancelLongPress() {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
   }
 
-  let background = selected ? 'rgba(233,69,96,0.10)' : 'rgba(255,255,255,0.04)'
-  let border     = selected ? '1px solid rgba(233,69,96,0.35)' : '1px solid rgba(255,255,255,0.07)'
-
-  if (isMergeSource) {
-    background = 'rgba(245,158,11,0.12)'
-    border     = '1px solid rgba(245,158,11,0.5)'
-  } else if (isMergeMode) {
-    border = '1px solid rgba(245,158,11,0.2)'
+  function handleClick() {
+    if (longPressedRef.current) {
+      longPressedRef.current = false
+      return
+    }
+    onTap()
   }
+
+  const amountStr = item.amount != null
+    ? `${item.quantity > 1 ? `${item.quantity} × ` : ''}${item.amount} ${item.unit ?? ''}`.trim()
+    : item.unit ?? ''
 
   return (
     <div
-      onClick={onSelect}
+      onClick={handleClick}
       onPointerDown={startLongPress}
       onPointerUp={cancelLongPress}
       onPointerLeave={cancelLongPress}
-      className={`relative rounded-xl px-3 pt-3 pb-3 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
-      style={{ background, border }}
+      className={`flex items-center gap-3 px-2 py-2.5 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
+      style={{
+        opacity:      isChecking ? 0.5 : 1,
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background:   isMergeSource
+          ? 'rgba(245,158,11,0.08)'
+          : isMergeMode
+            ? 'rgba(245,158,11,0.03)'
+            : 'transparent',
+      }}
     >
-      {!isMergeMode && (
+      <div style={{
+        width: 6, height: 6, borderRadius: '50%',
+        background: SECTION_COLORS[item.store_section],
+        opacity: 0.6, flexShrink: 0,
+      }} />
+
+      <span
+        className="flex-1 text-[14px] text-[#f0ede8]"
+        style={{
+          fontFamily:     'var(--font-geist-sans)',
+          textDecoration: isChecking ? 'line-through' : 'none',
+        }}
+      >
+        {item.name}
+      </span>
+
+      {amountStr && (
+        <span
+          className="shrink-0 text-[11px] text-white/35"
+          style={{ fontFamily: 'var(--font-geist-mono)' }}
+        >
+          {amountStr}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ── EditSheet ────────────────────────────────────────────────────────────────
+
+function EditSheet({
+  item,
+  onPatch,
+  onClose,
+}: {
+  item:    ShoppingListItem
+  onPatch: (patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section' | 'quantity'>>) => void
+  onClose: () => void
+}) {
+  const qty    = item.quantity ?? 1
+  const amount = item.amount ?? 1
+  const unit   = item.unit ?? 'stk'
+  const label  = qty > 1 ? `${qty} × ${amount} ${unit}` : `${amount} ${unit}`
+
+  return (
+    <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Name + close */}
+      <div className="flex items-center justify-between mb-3">
+        <span
+          className="text-[15px] font-medium text-[#f0ede8]"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+        >
+          {item.name}
+        </span>
         <button
-          onClick={e => { e.stopPropagation(); onRemove() }}
-          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white/30"
-          style={{ background: 'rgba(255,255,255,0.08)' }}
+          onClick={onClose}
+          className="text-[12px] text-white/30 p-1"
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ✕
         </button>
-      )}
-      <div
-        className="text-[14px] font-medium text-[#f0ede8] pr-5 leading-snug"
-        style={{ fontFamily: 'var(--font-geist-sans)' }}
-      >
-        {item.name}
       </div>
-      {(item.amount != null || item.unit) && (
-        <div
-          className="text-[11px] text-white/35 mt-0.5"
+
+      {/* Quantity row */}
+      <div className="flex items-center gap-3 mb-3">
+        <button
+          onClick={() => onPatch({ quantity: Math.max(1, qty - 1) })}
+          className="flex items-center justify-center rounded-lg text-white/60"
+          style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+        >
+          <span style={{ fontSize: 14, lineHeight: 1 }}>−</span>
+        </button>
+        <span
+          className="text-[22px] text-[#f0ede8]"
+          style={{ fontFamily: 'Georgia, serif', minWidth: 24, textAlign: 'center' as const }}
+        >
+          {qty}
+        </span>
+        <button
+          onClick={() => onPatch({ quantity: qty + 1 })}
+          className="flex items-center justify-center rounded-lg text-white/60"
+          style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+        >
+          <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
+        </button>
+        <span
+          className="text-[12px] text-white/40"
           style={{ fontFamily: 'var(--font-geist-mono)' }}
         >
-          {item.quantity > 1
-            ? `${item.quantity} × ${item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : item.unit}`
-            : item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : item.unit
-          }
-        </div>
-      )}
+          {label}
+        </span>
+      </div>
+
+      {/* Aisle row */}
+      <div className="flex flex-wrap gap-1.5">
+        {STORE_SECTION_ORDER.map(section => {
+          const active = item.store_section === section
+          const color  = SECTION_COLORS[section]
+          return (
+            <button
+              key={section}
+              onClick={() => onPatch({ store_section: section })}
+              className="rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[0.06em]"
+              style={{
+                fontFamily: 'var(--font-geist-mono)',
+                background: active ? color : 'rgba(255,255,255,0.06)',
+                color:      active ? '#fff' : 'rgba(255,255,255,0.3)',
+                border:     `1px solid ${active ? color : 'rgba(255,255,255,0.08)'}`,
+              }}
+            >
+              {STORE_SECTION_META[section].label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-// ── EditZone ──────────────────────────────────────────────────────────────────
-
-function EditZone({
-  item,
-  onPatch,
-  onRemove,
-}: {
-  item:     ShoppingListItem
-  onPatch:  (patch: Partial<Pick<ShoppingListItem, 'amount' | 'unit' | 'store_section' | 'quantity'>>) => void
-  onRemove: () => void
-}) {
-  const qty        = item.quantity ?? 1
-  const amountText = item.amount != null ? `${item.amount} ${item.unit ?? ''}`.trim() : (item.unit ?? '')
-
-  return (
-    <div
-      className="flex items-center gap-2 px-4 py-2.5"
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-    >
-      <span
-        className="flex-1 min-w-0 text-[13px] text-[#f0ede8] truncate"
-        style={{ fontFamily: 'var(--font-geist-sans)' }}
-      >
-        {item.name}
-      </span>
-      <span
-        className="text-[11px] text-white/35 shrink-0"
-        style={{ fontFamily: 'var(--font-geist-mono)' }}
-      >
-        {qty > 1 ? `${qty} × ${amountText}` : amountText}
-      </span>
-      <button
-        onClick={() => onPatch({ quantity: Math.max(1, qty - 1) })}
-        className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
-      >
-        −
-      </button>
-      <button
-        onClick={() => onPatch({ quantity: qty + 1 })}
-        className="w-7 h-7 rounded-lg flex items-center justify-center text-[14px] text-white/60 shrink-0"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
-      >
-        +
-      </button>
-      <select
-        value={item.unit ?? 'stk'}
-        onChange={e => onPatch({ unit: e.target.value })}
-        className="rounded-lg px-2 py-1.5 text-[12px] text-[#f0ede8] outline-none"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'var(--font-geist-mono)' }}
-      >
-        {SHOPPING_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-      </select>
-      <select
-        value={item.store_section}
-        onChange={e => onPatch({ store_section: e.target.value as StoreSection })}
-        className="rounded-lg px-2 py-1.5 text-[12px] text-[#f0ede8] outline-none"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'var(--font-geist-sans)' }}
-      >
-        {STORE_SECTION_ORDER.map(s => (
-          <option key={s} value={s}>{STORE_SECTION_META[s].emoji} {STORE_SECTION_META[s].label}</option>
-        ))}
-      </select>
-      <button
-        onClick={onRemove}
-        className="rounded-lg px-2.5 py-1.5 text-[11px] text-white/40 border border-white/10 shrink-0"
-      >
-        ✕
-      </button>
-    </div>
-  )
-}
-
-// ── MergeConfirmSheet ─────────────────────────────────────────────────────────
+// ── MergeConfirmSheet ────────────────────────────────────────────────────────
 
 function MergeConfirmSheet({
   source,

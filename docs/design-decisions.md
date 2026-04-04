@@ -68,3 +68,51 @@
 - Ingredients: Name left, scaled amount+unit right, divider lines between
 - Steps: Olive numbered circles, instruction text, ingredient pills below each step
 - Footer: Start cooking primary (olive), "Add to shopping list" small underlined text link
+
+## Screen 4 — Menu Builder
+
+### Menu List
+- Active menu pinned above scroll area — sticky, never scrolls away
+- Active menu card collapses as user scrolls: full card (images + 
+  recipe list) → compact bar (name flex:1, protein badge right)
+- Olive border signals active — no Active badge needed in collapsed state
+- "This week" label above active card, fades as card collapses
+- All other menus in scrollable list below "All menus" divider
+- Protein filter pills: All / Kjøtt / Kylling / Fisk / Vegetar
+  each in their own colour when active
+- Infinite scroll — load more menus as user approaches bottom
+- Menu card: 2x2 image grid, Georgia name, protein badge
+
+### Anchor Picker
+- First-use tooltip explaining the concept (dismissible with ×)
+- 2-column card grid, protein badge per card in protein colour
+
+### Review / Builder
+- Menu name: click-to-edit, tapping opens inline input
+- Shared ingredient count: shown as pill when ≥ 3 shared
+- When < 3 shared: amber actionable text "Only X shared — regenerate?"
+- Full ingredient dump removed — only shared ingredient pills per recipe
+- Anchor badge: olive, not red
+- Swap button: olive, not red
+- Pantry staples excluded from shared ingredient calculation:
+  salt, pepper, oil, butter, garlic, onion, water, sugar, flour,
+  eggs, milk, cream, stock, tomato paste, soy sauce, vinegar,
+  lemon juice, olive oil, baking powder, baking soda, cornstarch,
+  honey, mustard
+- Save button: olive
+
+### Menu Detail
+- Active menu CTA: "Add to shopping list" primary button
+- Per-recipe protein badges in protein colours
+- Clicking active card in list opens menu detail
+
+## Screen 6 — Profile & Settings (planned, not yet built)
+
+- Planned for when multi-user support is needed
+- Requires Supabase RLS implementation before any public launch
+- Will contain: account, light/dark mode toggle, default 
+  servings, store section ordering, data export
+- When added: bottom nav becomes Recipes / Menus / Shopping 
+  / Profile — Import moves to a centralised position
+- Do not build until RLS is implemented
+

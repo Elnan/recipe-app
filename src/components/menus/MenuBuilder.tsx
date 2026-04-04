@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { Recipe } from '../../../types/recipe'
 
 type Step = 'anchor' | 'generating' | 'review' | 'swap'
@@ -13,9 +13,7 @@ interface SaveData {
 }
 
 interface Props {
-  // All dinner recipes — used for anchor picker and swap picker
   dinnerRecipes: Recipe[]
-  // Pre-selected recipes: empty = new menu (anchor picker), 4 = editing (review)
   initialRecipes: Recipe[]
   initialName: string
   onSave: (data: SaveData) => void
@@ -23,12 +21,24 @@ interface Props {
   isEditing?: boolean
 }
 
-// Ingredient names that appear in 2+ recipes (case-insensitive match)
+const PANTRY_STAPLES = new Set([
+  'salt','pepper','oil','butter','garlic','onion','water',
+  'sugar','flour','eggs','egg','milk','cream','stock','broth',
+  'tomato paste','soy sauce','vinegar','lemon juice','olive oil',
+  'vegetable oil','baking powder','baking soda','cornstarch',
+  'honey','mustard','black pepper','white pepper',
+])
+
+function isStaple(name: string): boolean {
+  return PANTRY_STAPLES.has(name.toLowerCase().trim())
+}
+
 function computeShared(recipes: Recipe[]): Set<string> {
   const counts = new Map<string, number>()
   for (const r of recipes) {
     for (const ing of r.ingredients) {
       const key = ing.name.toLowerCase()
+      if (isStaple(key)) continue
       counts.set(key, (counts.get(key) ?? 0) + 1)
     }
   }
@@ -39,11 +49,13 @@ function computeShared(recipes: Recipe[]): Set<string> {
   return shared
 }
 
-// Ingredient names from `recipe` that exist in any of `others`
 function sharedWith(recipe: Recipe, others: Recipe[]): string[] {
-  const pool = new Set(others.flatMap(r => r.ingredients.map(i => i.name.toLowerCase())))
+  const pool = new Set(
+    others.flatMap(r => r.ingredients.map(i => i.name.toLowerCase()))
+      .filter(n => !isStaple(n))
+  )
   return recipe.ingredients
-    .filter(i => pool.has(i.name.toLowerCase()))
+    .filter(i => pool.has(i.name.toLowerCase()) && !isStaple(i.name))
     .map(i => i.name)
 }
 
@@ -62,6 +74,13 @@ const PROTEIN_LABEL: Record<ProteinType, string> = {
   vegetar: 'Vegetar',
 }
 
+const PROTEIN_COLORS: Record<ProteinType, { color: string; bg: string }> = {
+  kjott:   { color: '#c47a7a', bg: 'rgba(140,58,58,0.15)' },
+  kylling: { color: '#c4a96a', bg: 'rgba(140,122,78,0.15)' },
+  fisk:    { color: '#7aaac4', bg: 'rgba(90,122,140,0.15)' },
+  vegetar: { color: '#7ab88a', bg: 'rgba(74,124,89,0.15)' },
+}
+
 export default function MenuBuilder({
   dinnerRecipes,
   initialRecipes,
@@ -73,8 +92,10 @@ export default function MenuBuilder({
   const [step, setStep]             = useState<Step>(initialRecipes.length > 0 ? 'review' : 'anchor')
   const [menuRecipes, setMenuRecipes] = useState<Recipe[]>(initialRecipes)
   const [menuName, setMenuName]     = useState(initialName)
+  const [editingName, setEditingName] = useState(false)
   const [swapIndex, setSwapIndex]   = useState<number | null>(null)
   const [error, setError]           = useState<string | null>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!initialName) {
@@ -83,6 +104,10 @@ export default function MenuBuilder({
       setMenuName(`Week ${week} ${now.getFullYear()}`)
     }
   }, [])
+
+  useEffect(() => {
+    if (editingName) nameInputRef.current?.focus()
+  }, [editingName])
 
   const runSuggest = useCallback(async (anchor: Recipe) => {
     setStep('generating')
@@ -129,12 +154,10 @@ export default function MenuBuilder({
     onSave({ name: menuName.trim(), recipes: menuRecipes, dominant_protein: getDominantProtein(menuRecipes) })
   }
 
-  const shared          = step === 'review' ? computeShared(menuRecipes) : new Set<string>()
-  const totalIngredients = step === 'review'
-    ? new Set(menuRecipes.flatMap(r => r.ingredients.map(i => i.name.toLowerCase()))).size
-    : 0
+  const shared      = step === 'review' ? computeShared(menuRecipes) : new Set<string>()
+  const sharedCount = shared.size
 
-  // ── Anchor Picker ──────────────────────────────────────────────────────────
+  // ── Anchor Picker ──────────────────────────────────────────────────────
   if (step === 'anchor') {
     return (
       <div style={{ background: '#0a0a0a', minHeight: '100dvh', paddingBottom: 80 }}>
@@ -164,7 +187,7 @@ export default function MenuBuilder({
     )
   }
 
-  // ── Generating ─────────────────────────────────────────────────────────────
+  // ── Generating ─────────────────────────────────────────────────────────
   if (step === 'generating') {
     return (
       <div style={{ background: '#0a0a0a', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
@@ -177,7 +200,7 @@ export default function MenuBuilder({
     )
   }
 
-  // ── Swap Picker ────────────────────────────────────────────────────────────
+  // ── Swap Picker ────────────────────────────────────────────────────────
   if (step === 'swap') {
     const currentIds = new Set(menuRecipes.map(r => r.id))
     const others     = menuRecipes.filter((_, i) => i !== swapIndex)
@@ -221,7 +244,7 @@ export default function MenuBuilder({
     )
   }
 
-  // ── Review ─────────────────────────────────────────────────────────────────
+  // ── Review ─────────────────────────────────────────────────────────────
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100dvh', paddingBottom: 120 }}>
       {/* Header */}
@@ -230,21 +253,73 @@ export default function MenuBuilder({
         <h1 style={styles.heading}>{isEditing ? 'Edit menu' : 'Your week menu'}</h1>
       </div>
 
-      {/* Name input */}
+      {/* Menu name — click to edit */}
       <div style={{ padding: '16px 16px 0' }}>
-        <input
-          value={menuName}
-          onChange={e => setMenuName(e.target.value)}
-          placeholder="Menu name"
-          style={styles.nameInput}
-        />
+        {editingName ? (
+          <input
+            ref={nameInputRef}
+            value={menuName}
+            onChange={e => setMenuName(e.target.value)}
+            onBlur={() => setEditingName(false)}
+            onKeyDown={e => { if (e.key === 'Enter') setEditingName(false) }}
+            placeholder="Menu name"
+            style={styles.nameInput}
+          />
+        ) : (
+          <button
+            onClick={() => setEditingName(true)}
+            style={{
+              width:         '100%',
+              display:       'flex',
+              alignItems:    'center',
+              justifyContent:'space-between',
+              padding:       '12px 14px',
+              background:    'rgba(255,255,255,0.03)',
+              border:        '1px solid rgba(255,255,255,0.07)',
+              borderRadius:  12,
+              cursor:        'pointer',
+              textAlign:     'left' as const,
+            }}
+          >
+            <span style={{
+              fontFamily: 'Georgia, serif',
+              fontSize:   16,
+              color:      menuName.trim() ? '#f0ede8' : 'rgba(255,255,255,0.25)',
+              flex:       1,
+              overflow:   'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow:'ellipsis',
+            }}>
+              {menuName.trim() || 'Menu name'}
+            </span>
+            <span style={{
+              fontFamily:    'var(--font-geist-mono)',
+              fontSize:      9,
+              color:         'rgba(255,255,255,0.25)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              flexShrink:    0,
+              marginLeft:    8,
+            }}>
+              EDIT
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Summary pills */}
+      {/* Shared ingredient count */}
       {menuRecipes.length > 0 && (
-        <div style={{ padding: '12px 16px 0', display: 'flex', gap: 8 }}>
-          <span style={styles.sharedPill}>{shared.size} shared</span>
-          <span style={styles.totalPill}>{totalIngredients} total ingredients</span>
+        <div style={{ padding: '12px 16px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+          {sharedCount >= 3 ? (
+            <span style={styles.sharedPill}>{sharedCount} shared ingredients</span>
+          ) : (
+            <button
+              onClick={() => runSuggest(menuRecipes[0])}
+              style={styles.amberBtn}
+            >
+              Only {sharedCount} shared — regenerate?
+            </button>
+          )}
         </div>
       )}
 
@@ -255,6 +330,7 @@ export default function MenuBuilder({
             .filter(ing => shared.has(ing.name.toLowerCase()))
             .map(ing => ing.name)
           const isAnchor = i === 0
+          const pt = recipe.protein_type as ProteinType | undefined
 
           return (
             <div key={recipe.id} style={styles.recipeCard}>
@@ -262,9 +338,13 @@ export default function MenuBuilder({
                 <Thumb recipe={recipe} size={52} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3, flexWrap: 'wrap' }}>
-                    {isAnchor && <Badge text="Anchor" bg="#e94560" color="#fff" />}
-                    {recipe.protein_type && (
-                      <Badge text={PROTEIN_LABEL[recipe.protein_type]} bg="rgba(255,255,255,0.07)" color="rgba(255,255,255,0.45)" />
+                    {isAnchor && <Badge text="Anchor" bg="#5a6b42" color="#fff" />}
+                    {pt && (
+                      <Badge
+                        text={PROTEIN_LABEL[pt]}
+                        bg={PROTEIN_COLORS[pt].bg}
+                        color={PROTEIN_COLORS[pt].color}
+                      />
                     )}
                   </div>
                   <div style={styles.rowTitle}>{recipe.title}</div>
@@ -277,7 +357,7 @@ export default function MenuBuilder({
               </div>
 
               {recipeShared.length > 0 && (
-                <div style={{ padding: '0 14px 8px', display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                <div style={{ padding: '0 14px 10px', display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   {recipeShared.slice(0, 5).map(name => (
                     <span key={name} style={styles.ingPill}>{name}</span>
                   ))}
@@ -288,11 +368,6 @@ export default function MenuBuilder({
                   )}
                 </div>
               )}
-              <div style={{ padding: '0 14px 12px' }}>
-                <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontFamily: 'var(--font-geist-mono)', lineHeight: 1.6 }}>
-                  {recipe.ingredients.map(i => i.name).join(' · ')}
-                </div>
-              </div>
             </div>
           )
         })}
@@ -318,7 +393,7 @@ export default function MenuBuilder({
           disabled={!menuName.trim() || menuRecipes.length === 0}
           style={{
             ...styles.saveBtn,
-            background: menuName.trim() && menuRecipes.length > 0 ? '#e94560' : 'rgba(233,69,96,0.3)',
+            background: menuName.trim() && menuRecipes.length > 0 ? '#5a6b42' : 'rgba(90,107,66,0.3)',
             cursor: menuName.trim() && menuRecipes.length > 0 ? 'pointer' : 'not-allowed',
           }}
         >
@@ -352,6 +427,7 @@ function Badge({ text, bg, color }: { text: string; bg: string; color: string })
 
 function AnchorCard({ recipe, onPick }: { recipe: Recipe; onPick: (r: Recipe) => void }) {
   const pt = recipe.protein_type as ProteinType | undefined
+  const pColor = pt ? PROTEIN_COLORS[pt] : null
   return (
     <button onClick={() => onPick(recipe)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
       <div style={{ height: 110, background: '#1a0508', position: 'relative' }}>
@@ -359,8 +435,21 @@ function AnchorCard({ recipe, onPick }: { recipe: Recipe; onPick: (r: Recipe) =>
           ? <img src={recipe.image_url} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🍽️</div>
         }
-        {pt && (
-          <div style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', borderRadius: 5, padding: '2px 7px', fontSize: 9, color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-geist-mono)', textTransform: 'uppercase' }}>
+        {pt && pColor && (
+          <div style={{
+            position:       'absolute',
+            top:            6,
+            right:          6,
+            background:     pColor.bg,
+            border:         `1px solid ${pColor.color}`,
+            backdropFilter: 'blur(4px)',
+            borderRadius:   5,
+            padding:        '2px 7px',
+            fontSize:       9,
+            color:          pColor.color,
+            fontFamily:     'var(--font-geist-mono)',
+            textTransform:  'uppercase',
+          }}>
             {PROTEIN_LABEL[pt]}
           </div>
         )}
@@ -379,16 +468,16 @@ const styles = {
   subheading: { color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: '2px 0 0', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   backBtn:    { color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
   errorBanner: { margin: '12px 16px 0', padding: '10px 14px', background: 'rgba(233,69,96,0.12)', border: '1px solid rgba(233,69,96,0.3)', borderRadius: 10, color: '#e94560', fontSize: 13, fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  spinner:    { width: 40, height: 40, border: '3px solid rgba(255,255,255,0.08)', borderTop: '3px solid #e94560', borderRadius: '50%', animation: 'spin 0.8s linear infinite' } as React.CSSProperties,
+  spinner:    { width: 40, height: 40, border: '3px solid rgba(255,255,255,0.08)', borderTop: '3px solid #5a6b42', borderRadius: '50%', animation: 'spin 0.8s linear infinite' } as React.CSSProperties,
   swapRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', width: '100%' } as React.CSSProperties,
   rowTitle:   { color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties,
-  nameInput:  { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 14px', color: '#fff', fontSize: 16, fontFamily: 'var(--font-geist-sans)', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
-  sharedPill: { background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#52b788', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
-  totalPill:  { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
+  nameInput:  { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(90,107,66,0.5)', borderRadius: 12, padding: '12px 14px', color: '#fff', fontSize: 16, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
+  sharedPill: { background: 'rgba(90,107,66,0.15)', border: '1px solid rgba(90,107,66,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#5a6b42', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
+  amberBtn:   { background: 'rgba(244,162,97,0.1)', border: '1px solid rgba(244,162,97,0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#f4a261', fontFamily: 'var(--font-geist-mono)', cursor: 'pointer' } as React.CSSProperties,
   recipeCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' } as React.CSSProperties,
   ingPill:    { background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 20, padding: '3px 9px', fontSize: 11, color: '#52b788', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
   changeBtn:  { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: 'rgba(255,255,255,0.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
-  swapBtn:    { background: 'rgba(233,69,96,0.1)', border: '1px solid rgba(233,69,96,0.25)', borderRadius: 8, padding: '6px 10px', color: '#e94560', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
+  swapBtn:    { background: 'rgba(90,107,66,0.12)', border: '1px solid rgba(90,107,66,0.3)', borderRadius: 8, padding: '6px 10px', color: '#5a6b42', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
   regenBtn:   { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12, color: 'rgba(255,255,255,0.5)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   saveBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px', background: 'linear-gradient(to top, #0a0a0a 80%, transparent)', display: 'flex', gap: 10 } as React.CSSProperties,
   cancelBtn:  { padding: '14px 20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
