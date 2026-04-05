@@ -301,8 +301,11 @@ export default function ShoppingPage() {
 
       {/* Header */}
       <div
-        className="sticky top-0 z-10 border-b border-white/5 px-5 pt-5 pb-4"
-        style={{ background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(16px)' }}
+        className="sticky top-0 z-10 px-5 pt-5 pb-4"
+        style={{
+          background: 'color-mix(in srgb, var(--color-bg) 92%, transparent)',
+          backdropFilter: 'blur(16px)',
+        }}
       >
         <div className="flex items-center justify-between">
           <div>
@@ -312,18 +315,19 @@ export default function ShoppingPage() {
             >
               Shopping
             </h1>
-            <p className="mt-1 text-[10px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+            <p className="mt-1 text-[10px]" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}>
               {loading ? '…' : `${items.length} item${items.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           {hasSources && (
             <button
               onClick={() => setShowSources(s => !s)}
-              className="rounded-lg px-3 py-1.5 text-[11px] tracking-[0.04em] border text-white/40"
+              className="rounded-lg px-3 py-1.5 text-[11px] tracking-[0.04em] border"
               style={{
                 fontFamily:  'var(--font-geist-mono)',
-                borderColor: showSources ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.10)',
-                background:  showSources ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color:       'var(--color-text-dim)',
+                borderColor: 'var(--color-border)',
+                background:  showSources ? 'var(--color-surface)' : 'transparent',
               }}
             >
               Sources
@@ -337,8 +341,8 @@ export default function ShoppingPage() {
             {sourceFilter && (
               <button
                 onClick={() => setSourceFilter(null)}
-                className="shrink-0 rounded-full px-3 py-1 text-[10px] text-white/50 border border-white/10"
-                style={{ fontFamily: 'var(--font-geist-mono)', background: 'var(--color-surface)' }}
+                className="shrink-0 rounded-full px-3 py-1 text-[10px] border"
+                style={{ fontFamily: 'var(--font-geist-mono)', background: 'var(--color-surface)', color: 'var(--color-text-dim)', borderColor: 'var(--color-border)' }}
               >
                 Show all
               </button>
@@ -349,21 +353,24 @@ export default function ShoppingPage() {
               return (
                 <div
                   key={id}
-                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
+                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'var(--color-surface)',
+                    background: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
                   }}
                 >
                   <button
                     onClick={() => setSourceFilter(isFiltered ? null : { type: 'recipe', id })}
-                    className="text-[10px] text-white/50"
+                    className="text-[10px]"
+                    style={{ color: 'var(--color-text-dim)' }}
                   >
                     🍽️ {recipe?.title ?? 'Recipe'}
                   </button>
                   <button
                     onClick={() => handleRemoveSource('recipe_id', id)}
-                    className="text-[9px] text-white/25 ml-0.5"
+                    className="text-[9px] ml-0.5"
+                    style={{ color: 'var(--color-text-dim)' }}
                   >
                     ✕
                   </button>
@@ -376,21 +383,24 @@ export default function ShoppingPage() {
               return (
                 <div
                   key={id}
-                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border border-white/10"
+                  className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 border"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: isFiltered ? 'rgba(255,255,255,0.12)' : 'var(--color-surface)',
+                    background: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
                   }}
                 >
                   <button
                     onClick={() => setSourceFilter(isFiltered ? null : { type: 'menu', id })}
-                    className="text-[10px] text-white/50"
+                    className="text-[10px]"
+                    style={{ color: 'var(--color-text-dim)' }}
                   >
                     📅 {menu?.name ?? 'Menu'}
                   </button>
                   <button
                     onClick={() => handleRemoveSource('menu_id', id)}
-                    className="text-[9px] text-white/25 ml-0.5"
+                    className="text-[9px] ml-0.5"
+                    style={{ color: 'var(--color-text-dim)' }}
                   >
                     ✕
                   </button>
@@ -405,13 +415,13 @@ export default function ShoppingPage() {
       <div className="px-5 pt-4">
         {loading ? (
           <div className="flex justify-center pt-20">
-            <span className="text-[11px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+            <span className="text-[11px]" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}>
               Loading…
             </span>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center pt-20 gap-2">
-            <span className="text-3xl text-white/20">✓</span>
+            <span className="text-3xl" style={{ color: 'var(--color-text-dim)' }}>✓</span>
             <p
               className="text-[18px] font-semibold"
               style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
@@ -419,8 +429,8 @@ export default function ShoppingPage() {
               All done!
             </p>
             <p
-              className="text-[10px] uppercase tracking-[0.08em] text-white/20"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              className="text-[10px] uppercase tracking-[0.08em]"
+              style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
             >
               Your list is empty
             </p>
@@ -467,7 +477,7 @@ export default function ShoppingPage() {
       <div
         ref={panelRef}
         className="fixed left-0 right-0 z-30"
-        style={{ bottom: 64, background: '#111', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ bottom: 64, background: 'var(--color-bg)', borderTop: '1px solid var(--color-border)' }}
       >
         {/* Merge mode banner */}
         {mergeSourceId && !mergeTargetId && (
@@ -507,43 +517,63 @@ export default function ShoppingPage() {
             ? recentlyRemoved.slice(0, 2)
             : suggestions.slice(0, 5)
           return (
-            <div className="px-4 py-2 flex flex-col gap-0.5">
+            <div
+              className="flex w-full flex-col overflow-hidden"
+              style={{
+                background:    'var(--color-surface)',
+                borderBottom:  '1px solid var(--color-border)',
+              }}
+            >
               {showRecent && (
                 <span
-                  className="text-[9px] uppercase tracking-[0.08em] text-white/20 px-3 pb-1"
-                  style={{ fontFamily: 'var(--font-geist-mono)' }}
+                  className="text-[9px] uppercase tracking-[0.08em] px-5 pt-2 pb-1"
+                  style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                 >
                   Recent
                 </span>
               )}
-              {displayItems.map((s, i) => (
+              {displayItems.map((s, i) => {
+                const catColor = SECTION_COLORS[s.store_section]
+                return (
                 <button
+                  type="button"
                   key={`${s.name}-${i}`}
                   onClick={() => handleAddByName(s.name)}
-                  className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                  style={{ background: 'var(--color-surface)' }}
+                  className="flex w-full items-center justify-between gap-3 px-5 py-2.5 text-left border-b last:border-b-0"
+                  style={{
+                    background: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
+                  }}
                 >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span
+                      aria-hidden
+                      className="shrink-0 rounded-full"
+                      style={{ width: 6, height: 6, background: catColor }}
+                    />
+                    <span
+                      className="truncate text-[15px]"
+                      style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
+                    >
+                      {s.name}
+                    </span>
+                  </div>
                   <span
-                    className="text-[13px]"
-                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
-                  >
-                    {s.name}
-                  </span>
-                  <span
-                    className="text-[10px]"
-                    style={{ fontFamily: 'var(--font-geist-mono)', color: SECTION_COLORS[s.store_section] }}
+                    className="shrink-0 text-[10px]"
+                    style={{ fontFamily: 'var(--font-geist-mono)', color: catColor }}
                   >
                     {STORE_SECTION_META[s.store_section].label}
                   </span>
                 </button>
-              ))}
+                )
+              })}
             </div>
           )
         })()}
 
         {/* Search bar */}
         {!mergeSourceId && (
-          <div className="px-4 py-3">
+          <div className="px-4 py-3" style={{ background: 'var(--color-bg)' }}>
             <form
               onSubmit={e => {
                 e.preventDefault()
@@ -552,9 +582,9 @@ export default function ShoppingPage() {
             >
               <div
                 className="flex items-center rounded-xl px-3"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
-                <span className="text-[16px] text-white/30 mr-2 leading-none">+</span>
+                <span className="text-[16px] mr-2 leading-none" style={{ color: 'var(--color-text-dim)' }}>+</span>
                 <input
                   ref={inputRef}
                   value={searchQuery}
@@ -567,7 +597,7 @@ export default function ShoppingPage() {
                     blurTimerRef.current = setTimeout(() => { setSearchFocused(false); blurTimerRef.current = null }, 150)
                   }}
                   placeholder="Add an ingredient…"
-                  className="flex-1 py-3 text-[14px] outline-none bg-transparent placeholder:text-white/20"
+                  className="flex-1 py-3 text-[14px] outline-none bg-transparent placeholder:text-[color:var(--color-text-dim)]"
                   style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
                 />
               </div>
@@ -639,15 +669,18 @@ function ItemRow({
       onPointerDown={startLongPress}
       onPointerUp={cancelLongPress}
       onPointerLeave={cancelLongPress}
-      className={`flex items-center gap-3 px-2 py-2.5 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
+      className={`flex items-center gap-3 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
       style={{
-        opacity:      isChecking ? 0.5 : 1,
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        background:   isMergeSource
-          ? 'rgba(245,158,11,0.08)'
+        opacity:       isChecking ? 0.5 : 1,
+        background:    isMergeSource
+          ? 'rgba(245,158,11,0.14)'
           : isMergeMode
-            ? 'rgba(245,158,11,0.03)'
-            : 'transparent',
+            ? 'rgba(245,158,11,0.07)'
+            : 'var(--color-surface)',
+        border:        '1px solid var(--color-border)',
+        borderRadius:  10,
+        marginBottom:  4,
+        padding:       '11px 12px',
       }}
     >
       <div style={{
@@ -669,8 +702,8 @@ function ItemRow({
 
       {amountStr && (
         <span
-          className="shrink-0 text-[11px] text-white/35"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="shrink-0 text-[11px]"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           {amountStr}
         </span>
@@ -696,7 +729,7 @@ function EditSheet({
   const label  = qty > 1 ? `${qty} × ${amount} ${unit}` : `${amount} ${unit}`
 
   return (
-    <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
       {/* Name + close */}
       <div className="flex items-center justify-between mb-3">
         <span
@@ -707,8 +740,8 @@ function EditSheet({
         </span>
         <button
           onClick={onClose}
-          className="text-[12px] text-white/30 p-1"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+          className="text-[12px] p-1"
+          style={{ color: 'var(--color-text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ✕
         </button>
@@ -718,8 +751,8 @@ function EditSheet({
       <div className="flex items-center gap-3 mb-3">
         <button
           onClick={() => onPatch({ quantity: Math.max(1, qty - 1) })}
-          className="flex items-center justify-center rounded-lg text-white/60"
-          style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+          className="flex items-center justify-center rounded-lg"
+          style={{ width: 22, height: 22, background: 'var(--color-border)', color: 'var(--color-text-dim)' }}
         >
           <span style={{ fontSize: 14, lineHeight: 1 }}>−</span>
         </button>
@@ -731,14 +764,14 @@ function EditSheet({
         </span>
         <button
           onClick={() => onPatch({ quantity: qty + 1 })}
-          className="flex items-center justify-center rounded-lg text-white/60"
-          style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.08)' }}
+          className="flex items-center justify-center rounded-lg"
+          style={{ width: 22, height: 22, background: 'var(--color-border)', color: 'var(--color-text-dim)' }}
         >
           <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
         </button>
         <span
-          className="text-[12px] text-white/40"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="text-[12px]"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           {label}
         </span>
@@ -756,9 +789,9 @@ function EditSheet({
               className="rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[0.06em]"
               style={{
                 fontFamily: 'var(--font-geist-mono)',
-                background: active ? color : 'rgba(255,255,255,0.06)',
-                color:      active ? '#fff' : 'rgba(255,255,255,0.3)',
-                border:     `1px solid ${active ? color : 'rgba(255,255,255,0.08)'}`,
+                background: active ? color : 'transparent',
+                color:      active ? '#fff' : 'var(--color-text-dim)',
+                border:     `1px solid ${active ? color : 'var(--color-border)'}`,
               }}
             >
               {STORE_SECTION_META[section].label}
@@ -793,13 +826,13 @@ function MergeConfirmSheet({
       onClick={onCancel}
     >
       <div
-        className="w-full rounded-t-2xl px-6 pt-6 pb-10"
-        style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="w-full rounded-t-2xl px-6 pt-6 pb-10 border"
+        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         onClick={e => e.stopPropagation()}
       >
         <p
-          className="text-[11px] uppercase tracking-[0.08em] text-white/30 mb-4"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="text-[11px] uppercase tracking-[0.08em] mb-4"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           Merge items
         </p>
@@ -810,16 +843,16 @@ function MergeConfirmSheet({
           Merge {target.name} into {source.name}?
         </p>
         <p
-          className="text-[13px] text-white/40 mb-6"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="text-[13px] mb-6"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           Combined: {combined} {unit} · keeps name &ldquo;{source.name}&rdquo;
         </p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-xl py-3 text-[13px] font-medium text-white/50 border border-white/10"
-            style={{ fontFamily: 'var(--font-geist-sans)' }}
+            className="flex-1 rounded-xl py-3 text-[13px] font-medium border"
+            style={{ fontFamily: 'var(--font-geist-sans)', color: 'var(--color-text-dim)', borderColor: 'var(--color-border)' }}
           >
             Cancel
           </button>

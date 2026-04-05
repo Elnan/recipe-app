@@ -284,9 +284,10 @@ export default function RecipesPage() {
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
                       transition: 'all 150ms ease',
-                      background:  active ? 'rgba(255,255,255,0.12)' : 'transparent',
-                      borderColor: active ? 'rgba(255,255,255,0.25)' : 'var(--color-border)',
-                      color:       active ? 'rgba(255,255,255,0.8)'  : 'var(--color-text-dim)',
+                      background:  active ? 'var(--color-accent)' : 'transparent',
+                      borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
+                      color:       active ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                      fontWeight:  active ? 600 : 400,
                     }}
                   >
                     {pt.label}
