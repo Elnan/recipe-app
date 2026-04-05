@@ -60,9 +60,11 @@ function formatAmount(n: number): string {
 interface RecipeDetailProps {
   recipe:            Recipe
   onRecipeUpdate?:   (updated: Recipe) => void
+  /** When set (e.g. embedded in menus), Back / post-delete navigate here instead of router.back() */
+  onBack?:           () => void
 }
 
-export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailProps) {
+export default function RecipeDetail({ recipe, onRecipeUpdate, onBack }: RecipeDetailProps) {
   const router = useRouter()
   const [isEditing,       setIsEditing]       = useState(false)
   const [currentRecipe,   setCurrentRecipe]   = useState(recipe)
@@ -107,7 +109,8 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
         }}
         onDelete={async () => {
           await fetch(`/api/recipes/${currentRecipe.id}`, { method: 'DELETE' })
-          router.back()
+          if (onBack) onBack()
+          else router.back()
         }}
       />
     )
@@ -177,7 +180,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
 
         {/* Back button */}
         <button
-          onClick={() => router.back()}
+          onClick={() => { if (onBack) onBack(); else router.back() }}
           className="absolute left-4 top-4 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] text-white/70 hover:text-white transition-colors"
           style={{
             background: 'rgba(0,0,0,0.45)',

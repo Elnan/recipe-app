@@ -5,9 +5,10 @@ import { getMenus, createMenu, updateMenu, deleteMenu, setMenuActive, setMenuRec
 import { getRecipes } from '../../../lib/recipes'
 import MenuBuilder from '../../components/menus/MenuBuilder'
 import MenuDetail from '../../components/menus/MenuDetail'
+import RecipeDetail from '../../components/recipes/RecipeDetail'
 import type { MenuWithRecipes, Recipe } from '../../../types/recipe'
 
-type View = 'list' | 'detail' | 'builder'
+type View = 'list' | 'detail' | 'builder' | 'recipe'
 type ProteinFilter = 'all' | 'kjott' | 'kylling' | 'fisk' | 'vegetar'
 type ProteinType = 'kjott' | 'kylling' | 'fisk' | 'vegetar'
 
@@ -41,6 +42,7 @@ export default function MenusPage() {
   const [loading, setLoading]             = useState(true)
   const [view, setView]                   = useState<View>('list')
   const [selectedMenu, setSelectedMenu]   = useState<MenuWithRecipes | null>(null)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
   const [isEditing, setIsEditing]         = useState(false)
   const [proteinFilter, setProteinFilter] = useState<ProteinFilter>('all')
   const [scrollY, setScrollY]             = useState(0)
@@ -71,6 +73,17 @@ export default function MenusPage() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [loading])
+
+  useEffect(() => {
+    if (view !== 'recipe' || !selectedRecipeId || !selectedMenu) return
+    const found =
+      selectedMenu.recipes.find(r => r.id === selectedRecipeId)
+      ?? dinnerRecipes.find(r => r.id === selectedRecipeId)
+    if (!found) {
+      setView('detail')
+      setSelectedRecipeId(null)
+    }
+  }, [view, selectedRecipeId, selectedMenu, dinnerRecipes])
 
   async function refreshMenus() {
     const menus = await getMenus()
@@ -146,6 +159,39 @@ export default function MenusPage() {
 
   // ── Views ────────────────────────────────────────────────────────────────
 
+  if (view === 'recipe' && selectedMenu && selectedRecipeId) {
+    const recipeForView =
+      selectedMenu.recipes.find(r => r.id === selectedRecipeId)
+      ?? dinnerRecipes.find(r => r.id === selectedRecipeId)
+    if (recipeForView) {
+      return (
+        <RecipeDetail
+          key={selectedRecipeId}
+          recipe={recipeForView}
+          onBack={() => { setView('detail'); setSelectedRecipeId(null) }}
+          onRecipeUpdate={updated => {
+            setAllMenus(menus =>
+              menus.map(m => {
+                if (m.id !== selectedMenu.id) return m
+                return {
+                  ...m,
+                  recipes: m.recipes.map(r => (r.id === updated.id ? updated : r)),
+                }
+              }),
+            )
+            setSelectedMenu(prev => {
+              if (!prev || prev.id !== selectedMenu.id) return prev
+              return {
+                ...prev,
+                recipes: prev.recipes.map(r => (r.id === updated.id ? updated : r)),
+              }
+            })
+          }}
+        />
+      )
+    }
+  }
+
   if (view === 'builder') {
     return (
       <MenuBuilder
@@ -157,6 +203,7 @@ export default function MenusPage() {
         onCancel={() => {
           setView(selectedMenu && isEditing ? 'detail' : 'list')
           setIsEditing(false)
+          setSelectedRecipeId(null)
         }}
       />
     )
@@ -166,10 +213,11 @@ export default function MenusPage() {
     return (
       <MenuDetail
         menu={selectedMenu}
-        onBack={() => { setSelectedMenu(null); setView('list') }}
-        onEdit={() => { setIsEditing(true); setView('builder') }}
+        onBack={() => { setSelectedMenu(null); setView('list'); setSelectedRecipeId(null) }}
+        onEdit={() => { setSelectedRecipeId(null); setIsEditing(true); setView('builder') }}
         onDelete={handleDelete}
         onSetActive={handleSetActive}
+        onRecipeClick={id => { setSelectedRecipeId(id); setView('recipe') }}
       />
     )
   }
@@ -203,7 +251,7 @@ export default function MenusPage() {
               </p>
             </div>
             <button
-              onClick={() => { setSelectedMenu(null); setIsEditing(false); setView('builder') }}
+              onClick={() => { setSelectedMenu(null); setIsEditing(false); setSelectedRecipeId(null); setView('builder') }}
               className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em]"
               style={{ background: 'var(--color-accent)', color: 'var(--color-bg)', fontFamily: 'var(--font-geist-mono)' }}
             >
@@ -258,7 +306,7 @@ export default function MenusPage() {
             </p>
 
             <button
-              onClick={() => { setSelectedMenu(activeMenu); setView('detail') }}
+              onClick={() => { setSelectedMenu(activeMenu); setSelectedRecipeId(null); setView('detail') }}
               style={{
                 width:        '100%',
                 textAlign:    'left' as const,
@@ -274,25 +322,26 @@ export default function MenusPage() {
               {/* Image grid — collapses */}
               <div
                 style={{
-                  display:            'grid',
-                  gridTemplateColumns:'1fr 1fr',
-                  gap:                2,
-                  height:             Math.round(120 * (1 - progress)),
-                  overflow:           'hidden',
-                  transition:         'height 0.1s ease',
-                  opacity:            1 - progress,
+                  display:              'grid',
+                  gridTemplateColumns:  '1fr 1fr',
+                  gridTemplateRows:     '1fr 1fr',
+                  gap:                  2,
+                  height:               Math.round(160 * (1 - progress)),
+                  overflow:             'hidden',
+                  transition:           'height 0.1s ease',
+                  opacity:              1 - progress,
                 }}
               >
                 {Array.from({ length: 4 }, (_, i) => activeMenu.recipes[i] ?? null).map((recipe, i) => (
-                  <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative' }}>
+                  <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
                     {recipe?.image_url ? (
                       <img
                         src={recipe.image_url}
                         alt={recipe.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
                       />
                     ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, opacity: 0.25 }}>
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, opacity: 0.3 }}>
                         🍽️
                       </div>
                     )}
@@ -386,7 +435,7 @@ export default function MenusPage() {
                 <MenuCard
                   key={menu.id}
                   menu={menu}
-                  onClick={() => { setSelectedMenu(menu); setView('detail') }}
+                  onClick={() => { setSelectedMenu(menu); setSelectedRecipeId(null); setView('detail') }}
                 />
               ))}
               {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
@@ -442,17 +491,25 @@ function MenuCard({ menu, onClick }: { menu: MenuWithRecipes; onClick: () => voi
       }}
     >
       {/* 2x2 image grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, height: 140 }}>
+      <div style={{
+        display:              'grid',
+        gridTemplateColumns:  '1fr 1fr',
+        gridTemplateRows:     '1fr 1fr',
+        height:               160,
+        gap:                  2,
+        overflow:             'hidden',
+      }}
+      >
         {slots.map((recipe, i) => (
-          <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative' }}>
+          <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
             {recipe?.image_url ? (
               <img
                 src={recipe.image_url}
                 alt={recipe.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
               />
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, opacity: 0.25 }}>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, opacity: 0.3 }}>
                 🍽️
               </div>
             )}

@@ -11,6 +11,7 @@ interface Props {
   onEdit: () => void
   onDelete: () => void
   onSetActive: (addToShoppingList: boolean) => void
+  onRecipeClick?: (recipeId: string) => void
 }
 
 const PROTEIN_LABEL: Record<ProteinType, string> = {
@@ -27,7 +28,7 @@ const PROTEIN_COLORS: Record<ProteinType, { color: string; bg: string }> = {
   vegetar: { color: '#7ab88a', bg: 'rgba(74,124,89,0.15)' },
 }
 
-export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive }: Props) {
+export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive, onRecipeClick }: Props) {
   const [showActiveSheet, setShowActiveSheet] = useState(false)
   const [showDeleteSheet, setShowDeleteSheet] = useState(false)
   const [addingToList,    setAddingToList]    = useState(false)
@@ -102,7 +103,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
         {/* Recipe list */}
         <div style={{ padding: '20px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {menu.recipes.map((recipe: Recipe) => (
-            <RecipeRow key={recipe.id} recipe={recipe} />
+            <RecipeRow key={recipe.id} recipe={recipe} onRecipeClick={onRecipeClick} />
           ))}
           {menu.recipes.length === 0 && (
             <p style={{ color: 'var(--color-text-dim)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
@@ -191,13 +192,30 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function RecipeRow({ recipe }: { recipe: Recipe }) {
+function RecipeRow({
+  recipe,
+  onRecipeClick,
+}: {
+  recipe: Recipe
+  onRecipeClick?: (recipeId: string) => void
+}) {
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0)
   const pt = recipe.protein_type as ProteinType | undefined
   const pColor = pt ? PROTEIN_COLORS[pt] : null
 
   return (
-    <div style={styles.recipeRow}>
+    <button
+      type="button"
+      onClick={() => onRecipeClick?.(recipe.id)}
+      style={{
+        ...styles.recipeRow,
+        cursor:     onRecipeClick ? 'pointer' : 'default',
+        width:      '100%',
+        boxSizing:  'border-box',
+        font:       'inherit',
+        textAlign:  'left' as const,
+      }}
+    >
       <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle)' }}>
         {recipe.image_url
           ? <img src={recipe.image_url} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -232,7 +250,7 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
           )}
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 
