@@ -122,7 +122,7 @@ export default function CookingMode({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {stepIngs.map(ing => (
-          <div key={ing.name} style={{
+          <div key={`${currentStep?.order ?? step}-${ing.name}`} style={{
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between',
             padding: desktop ? '12px 16px' : '8px 12px',

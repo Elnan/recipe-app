@@ -457,7 +457,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
               const highlighted = stepIngredients?.has(ing.name)
               return (
                 <li
-                  key={i}
+                  key={`ing-${i}`}
                   className="flex items-baseline justify-between rounded-xl px-4 py-3 transition-colors"
                   style={{
                     background: highlighted
@@ -533,7 +533,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
                       <div className="mt-3 flex flex-wrap gap-1.5 pl-8">
                         {stepIngs.map(ing => (
                           <span
-                            key={ing.name}
+                            key={`${step.order}-${ing.name}`}
                             className="rounded-full border px-2.5 py-0.5 text-[10px]"
                             style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                           >
@@ -549,7 +549,7 @@ export default function RecipeDetail({ recipe, onRecipeUpdate }: RecipeDetailPro
                         <table className="w-full">
                           <tbody>
                             {stepIngs.map(ing => (
-                              <tr key={ing.name} className="border-t" style={{ borderColor: 'var(--color-border)' }}>
+                              <tr key={`${step.order}-${ing.name}`} className="border-t" style={{ borderColor: 'var(--color-border)' }}>
                                 <td
                                   className="py-2 text-[13px]"
                                   style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
