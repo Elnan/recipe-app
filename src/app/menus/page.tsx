@@ -183,8 +183,12 @@ export default function MenusPage() {
       <div style={{ flexShrink: 0 }}>
         {/* Title + New menu */}
         <div
-          className="border-b border-white/[0.05] px-5 pt-5 pb-3"
-          style={{ background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(16px)' }}
+          className="px-5 pt-5 pb-3 border-b"
+          style={{
+            background:   'color-mix(in srgb, var(--color-bg) 92%, transparent)',
+            backdropFilter: 'blur(16px)',
+            borderColor:    'var(--color-border)',
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -194,14 +198,14 @@ export default function MenusPage() {
               >
                 Menus
               </h1>
-              <p className="mt-1 text-[10px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+              <p className="mt-1 text-[10px]" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}>
                 {loading ? '…' : `${filtered.length} menu${filtered.length !== 1 ? 's' : ''}`}
               </p>
             </div>
             <button
               onClick={() => { setSelectedMenu(null); setIsEditing(false); setView('builder') }}
-              className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em] text-white"
-              style={{ background: 'var(--color-accent)', fontFamily: 'var(--font-geist-mono)' }}
+              className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em]"
+              style={{ background: 'var(--color-accent)', color: 'var(--color-bg)', fontFamily: 'var(--font-geist-mono)' }}
             >
               + New menu
             </button>
@@ -224,10 +228,10 @@ export default function MenusPage() {
                       : 'transparent',
                     borderColor: active
                       ? (pColor ? pColor.color : 'var(--color-accent)')
-                      : 'rgba(255,255,255,0.08)',
+                      : 'var(--color-border)',
                     color:       active
                       ? (pColor ? pColor.color : 'var(--color-accent)')
-                      : 'rgba(255,255,255,0.3)',
+                      : 'var(--color-text-dim)',
                   }}
                 >
                   {tab.label}
@@ -242,9 +246,10 @@ export default function MenusPage() {
           <div className="px-4 pt-3 pb-0">
             {/* "This week" label — fades out */}
             <p
-              className="text-[9px] uppercase tracking-[0.1em] text-white/25 mb-1.5 pl-1"
+              className="text-[9px] uppercase tracking-[0.1em] mb-1.5 pl-1"
               style={{
                 fontFamily: 'var(--font-geist-mono)',
+                color:      'var(--color-text-dim)',
                 opacity:    1 - progress,
                 transition: 'opacity 0.15s ease',
               }}
@@ -279,7 +284,7 @@ export default function MenusPage() {
                 }}
               >
                 {Array.from({ length: 4 }, (_, i) => activeMenu.recipes[i] ?? null).map((recipe, i) => (
-                  <div key={i} style={{ background: '#111', overflow: 'hidden', position: 'relative' }}>
+                  <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative' }}>
                     {recipe?.image_url ? (
                       <img
                         src={recipe.image_url}
@@ -348,8 +353,8 @@ export default function MenusPage() {
         {otherMenus.length > 0 && (
           <div className="px-5 pt-4 pb-2">
             <span
-              className="text-[9px] uppercase tracking-[0.1em] text-white/20"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              className="text-[9px] uppercase tracking-[0.1em]"
+              style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
             >
               All menus
             </span>
@@ -366,12 +371,12 @@ export default function MenusPage() {
         <div className="px-4">
           {loading ? (
             <div className="flex justify-center pt-20">
-              <span className="text-[11px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>Loading…</span>
+              <span className="text-[11px]" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}>Loading…</span>
             </div>
           ) : otherMenus.length === 0 && !activeMenu ? (
             <div className="flex flex-col items-center pt-20 gap-3">
               <span className="text-4xl opacity-25">📅</span>
-              <p className="text-[12px] text-white/20" style={{ fontFamily: 'var(--font-geist-mono)' }}>
+              <p className="text-[12px]" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}>
                 {proteinFilter === 'all' ? 'No menus yet' : 'No menus with this protein'}
               </p>
             </div>
@@ -439,7 +444,7 @@ function MenuCard({ menu, onClick }: { menu: MenuWithRecipes; onClick: () => voi
       {/* 2x2 image grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, height: 140 }}>
         {slots.map((recipe, i) => (
-          <div key={i} style={{ background: '#111', overflow: 'hidden', position: 'relative' }}>
+          <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative' }}>
             {recipe?.image_url ? (
               <img
                 src={recipe.image_url}

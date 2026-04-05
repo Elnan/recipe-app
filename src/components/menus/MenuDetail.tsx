@@ -105,7 +105,7 @@ export default function MenuDetail({ menu, onBack, onEdit, onDelete, onSetActive
             <RecipeRow key={recipe.id} recipe={recipe} />
           ))}
           {menu.recipes.length === 0 && (
-            <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
+            <p style={{ color: 'var(--color-text-dim)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
               No recipes in this menu
             </p>
           )}
@@ -198,7 +198,7 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
 
   return (
     <div style={styles.recipeRow}>
-      <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#1a0508' }}>
+      <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle)' }}>
         {recipe.image_url
           ? <img src={recipe.image_url} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>
@@ -206,7 +206,7 @@ function RecipeRow({ recipe }: { recipe: Recipe }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
+          <span style={{ color: 'var(--color-text)', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
             {recipe.title}
           </span>
           {pt && pColor && (
@@ -243,8 +243,8 @@ function BottomSheet({ children, onDismiss }: { children: React.ReactNode; onDis
         onClick={onDismiss}
         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
       />
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#141414', borderTop: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px' }}>
-        <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 20px' }} />
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px' }}>
+        <div style={{ width: 36, height: 4, background: 'var(--color-border)', borderRadius: 2, margin: '0 auto 20px' }} />
         {children}
       </div>
     </>
@@ -254,17 +254,17 @@ function BottomSheet({ children, onDismiss }: { children: React.ReactNode; onDis
 // ── Style constants ────────────────────────────────────────────────────────
 
 const styles = {
-  heading:      { color: '#fff', fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'var(--font-geist-sans)', lineHeight: 1.2 } as React.CSSProperties,
-  backBtn:      { color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
-  editBtn:      { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 16px', color: 'rgba(255,255,255,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0, marginTop: 4 } as React.CSSProperties,
+  heading:      { color: 'var(--color-text)', fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'var(--font-geist-sans)', lineHeight: 1.2 } as React.CSSProperties,
+  backBtn:      { color: 'var(--color-text-dim)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
+  editBtn:      { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '8px 16px', color: 'var(--color-text-dim)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0, marginTop: 4 } as React.CSSProperties,
   activeBadge:  { background: 'rgba(82,183,136,0.15)', border: '1px solid rgba(82,183,136,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#52b788', fontFamily: 'var(--font-geist-mono)', letterSpacing: '0.04em' } as React.CSSProperties,
-  weekBadge:    { background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
+  weekBadge:    { background: 'var(--color-surface)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
   recipeRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '12px 14px' } as React.CSSProperties,
   deleteBtn:    { width: '100%', background: 'transparent', border: '1px solid rgba(233,69,96,0.2)', borderRadius: 12, padding: 14, color: 'rgba(233,69,96,0.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   stickyBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px 28px', background: 'linear-gradient(to top, var(--color-bg) 80%, transparent)', display: 'flex', flexDirection: 'column' as const, gap: 8 } as React.CSSProperties,
   activeLabel:  { color: '#52b788', fontSize: 13, fontFamily: 'var(--font-geist-sans)', textAlign: 'center' as const, margin: 0 } as React.CSSProperties,
   primaryBtn:   { width: '100%', padding: 14, background: 'var(--color-accent)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  ghostBtn:     { width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  sheetTitle:   { color: '#fff', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-geist-sans)', margin: 0 } as React.CSSProperties,
-  sheetBody:    { color: 'rgba(255,255,255,0.45)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: '8px 0 0' } as React.CSSProperties,
+  ghostBtn:     { width: '100%', padding: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, color: 'var(--color-text-dim)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  sheetTitle:   { color: 'var(--color-text)', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-geist-sans)', margin: 0 } as React.CSSProperties,
+  sheetBody:    { color: 'var(--color-text-dim)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: '8px 0 0' } as React.CSSProperties,
 }

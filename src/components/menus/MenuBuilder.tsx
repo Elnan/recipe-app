@@ -178,7 +178,7 @@ export default function MenuBuilder({
             <AnchorCard key={recipe.id} recipe={recipe} onPick={r => runSuggest(r)} />
           ))}
           {dinnerRecipes.length === 0 && (
-            <p style={{ gridColumn: 'span 2', color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
+            <p style={{ gridColumn: 'span 2', color: 'var(--color-text-dim)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
               No dinner recipes yet — import some first
             </p>
           )}
@@ -192,7 +192,7 @@ export default function MenuBuilder({
     return (
       <div style={{ background: 'var(--color-bg)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
         <div style={styles.spinner} />
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: 0 }}>
+        <p style={{ color: 'var(--color-text-dim)', fontSize: 14, fontFamily: 'var(--font-geist-sans)', margin: 0 }}>
           Finding recipes that work together…
         </p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -226,7 +226,7 @@ export default function MenuBuilder({
                       {overlap.length} shared: {overlap.slice(0, 2).join(', ')}{overlap.length > 2 ? ` +${overlap.length - 2}` : ''}
                     </div>
                   ) : (
-                    <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>
+                    <div style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-mono)' }}>
                       No shared ingredients
                     </div>
                   )}
@@ -235,7 +235,7 @@ export default function MenuBuilder({
             )
           })}
           {candidates.length === 0 && (
-            <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
+            <p style={{ color: 'var(--color-text-dim)', textAlign: 'center', padding: '40px 0', fontFamily: 'var(--font-geist-sans)', fontSize: 14 }}>
               No other dinner recipes available
             </p>
           )}
@@ -274,8 +274,8 @@ export default function MenuBuilder({
               alignItems:    'center',
               justifyContent:'space-between',
               padding:       '12px 14px',
-              background:    'rgba(255,255,255,0.03)',
-              border:        '1px solid rgba(255,255,255,0.07)',
+              background:    'var(--color-surface)',
+              border:        '1px solid var(--color-border)',
               borderRadius:  12,
               cursor:        'pointer',
               textAlign:     'left' as const,
@@ -284,7 +284,7 @@ export default function MenuBuilder({
             <span style={{
               fontFamily: 'Georgia, serif',
               fontSize:   16,
-              color:      menuName.trim() ? 'var(--color-text)' : 'rgba(255,255,255,0.25)',
+              color:      menuName.trim() ? 'var(--color-text)' : 'var(--color-text-dim)',
               flex:       1,
               overflow:   'hidden',
               whiteSpace: 'nowrap',
@@ -295,7 +295,7 @@ export default function MenuBuilder({
             <span style={{
               fontFamily:    'var(--font-geist-mono)',
               fontSize:      9,
-              color:         'rgba(255,255,255,0.25)',
+              color:         'var(--color-text-dim)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               flexShrink:    0,
@@ -362,7 +362,7 @@ export default function MenuBuilder({
                     <span key={name} style={styles.ingPill}>{name}</span>
                   ))}
                   {recipeShared.length > 5 && (
-                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontFamily: 'var(--font-geist-mono)', padding: '3px 0' }}>
+                    <span style={{ color: 'var(--color-text-dim)', fontSize: 11, fontFamily: 'var(--font-geist-mono)', padding: '3px 0' }}>
                       +{recipeShared.length - 5} more
                     </span>
                   )}
@@ -408,7 +408,7 @@ export default function MenuBuilder({
 
 function Thumb({ recipe, size }: { recipe: Recipe; size: number }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#1a0508' }}>
+    <div style={{ width: size, height: size, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle)' }}>
       {recipe.image_url
         ? <img src={recipe.image_url} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(size * 0.4) }}>🍽️</div>
@@ -430,7 +430,7 @@ function AnchorCard({ recipe, onPick }: { recipe: Recipe; onPick: (r: Recipe) =>
   const pColor = pt ? PROTEIN_COLORS[pt] : null
   return (
     <button onClick={() => onPick(recipe)} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
-      <div style={{ height: 110, background: '#1a0508', position: 'relative' }}>
+      <div style={{ height: 110, background: 'var(--color-subtle)', position: 'relative' }}>
         {recipe.image_url
           ? <img src={recipe.image_url} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🍽️</div>
@@ -454,7 +454,7 @@ function AnchorCard({ recipe, onPick }: { recipe: Recipe; onPick: (r: Recipe) =>
           </div>
         )}
       </div>
-      <div style={{ padding: '10px 12px 12px', color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', lineHeight: 1.3 }}>
+      <div style={{ padding: '10px 12px 12px', color: 'var(--color-text)', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', lineHeight: 1.3 }}>
         {recipe.title}
       </div>
     </button>
@@ -464,22 +464,22 @@ function AnchorCard({ recipe, onPick }: { recipe: Recipe; onPick: (r: Recipe) =>
 // ── Style constants ────────────────────────────────────────────────────────
 
 const styles = {
-  heading:    { color: '#fff', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  subheading: { color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: '2px 0 0', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  backBtn:    { color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
+  heading:    { color: 'var(--color-text)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  subheading: { color: 'var(--color-text-dim)', fontSize: 13, margin: '2px 0 0', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  backBtn:    { color: 'var(--color-text-dim)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px 4px 0', flexShrink: 0 } as React.CSSProperties,
   errorBanner: { margin: '12px 16px 0', padding: '10px 14px', background: 'rgba(233,69,96,0.12)', border: '1px solid rgba(233,69,96,0.3)', borderRadius: 10, color: '#e94560', fontSize: 13, fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
-  spinner:    { width: 40, height: 40, border: '3px solid rgba(255,255,255,0.08)', borderTop: '3px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' } as React.CSSProperties,
+  spinner:    { width: 40, height: 40, border: '3px solid var(--color-border)', borderTop: '3px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' } as React.CSSProperties,
   swapRow:    { display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', width: '100%' } as React.CSSProperties,
-  rowTitle:   { color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties,
-  nameInput:  { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(90,107,66,0.5)', borderRadius: 12, padding: '12px 14px', color: '#fff', fontSize: 16, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
+  rowTitle:   { color: 'var(--color-text)', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties,
+  nameInput:  { width: '100%', background: 'var(--color-surface)', border: '1px solid rgba(90,107,66,0.5)', borderRadius: 12, padding: '12px 14px', color: 'var(--color-text)', fontSize: 16, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
   sharedPill: { background: 'rgba(90,107,66,0.15)', border: '1px solid rgba(90,107,66,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: 'var(--color-accent)', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
   amberBtn:   { background: 'rgba(244,162,97,0.1)', border: '1px solid rgba(244,162,97,0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#f4a261', fontFamily: 'var(--font-geist-mono)', cursor: 'pointer' } as React.CSSProperties,
   recipeCard: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, overflow: 'hidden' } as React.CSSProperties,
   ingPill:    { background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 20, padding: '3px 9px', fontSize: 11, color: '#52b788', fontFamily: 'var(--font-geist-mono)' } as React.CSSProperties,
-  changeBtn:  { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: 'rgba(255,255,255,0.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
+  changeBtn:  { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '6px 10px', color: 'var(--color-text-dim)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
   swapBtn:    { background: 'var(--color-accent-light)', border: '1px solid rgba(90,107,66,0.3)', borderRadius: 8, padding: '6px 10px', color: 'var(--color-accent)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
-  regenBtn:   { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12, color: 'rgba(255,255,255,0.5)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
+  regenBtn:   { width: '100%', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 12, color: 'var(--color-text-dim)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
   saveBar:    { position: 'fixed', bottom: 64, left: 0, right: 0, padding: '12px 16px', background: 'linear-gradient(to top, var(--color-bg) 80%, transparent)', display: 'flex', gap: 10 } as React.CSSProperties,
-  cancelBtn:  { padding: '14px 20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'rgba(255,255,255,0.5)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
+  cancelBtn:  { padding: '14px 20px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, color: 'var(--color-text-dim)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-geist-sans)', flexShrink: 0 } as React.CSSProperties,
   saveBtn:    { flex: 1, padding: 14, border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-geist-sans)' } as React.CSSProperties,
 }
