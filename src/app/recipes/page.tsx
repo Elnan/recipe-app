@@ -228,23 +228,15 @@ export default function RecipesPage() {
                 <button
                   key={cat}
                   onClick={() => { setActiveCategory(cat); if (cat !== 'dinner') setActiveProtein('all') }}
+                  className="rounded-full border transition-all cursor-pointer shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px] min-h-[30px] md:px-4 md:py-[7px] md:text-[12px] md:min-h-[32px]"
                   style={{
-                    fontFamily: 'var(--font-geist-mono)',
-                    fontSize: 12,
+                    fontFamily:    'var(--font-geist-mono)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.08em',
-                    borderRadius: 999,
-                    padding: '7px 16px',
-                    minHeight: 32,
-                    border: '1px solid',
-                    flexShrink: 0,
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    transition: 'all 150ms ease',
-                    background: active ? 'var(--color-accent)' : 'transparent',
-                    borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
-                    color: active ? 'var(--color-bg)' : 'var(--color-text-dim)',
-                    fontWeight: active ? 600 : 400,
+                    background:    active ? 'var(--color-accent)' : 'transparent',
+                    borderColor:   active ? 'var(--color-accent)' : 'var(--color-border)',
+                    color:         active ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                    fontWeight:    active ? 600 : 400,
                   }}
                 >
                   {cat === 'all' ? 'All' : `${CATEGORY_EMOJI[cat]} ${cat}`}
@@ -271,23 +263,15 @@ export default function RecipesPage() {
                   <button
                     key={pt.value}
                     onClick={() => setActiveProtein(pt.value)}
+                    className="rounded-full border transition-all cursor-pointer shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px] min-h-[30px] md:px-4 md:py-[7px] md:text-[12px] md:min-h-[32px]"
                     style={{
-                      fontFamily:  'var(--font-geist-mono)',
-                      fontSize: 12,
+                      fontFamily:    'var(--font-geist-mono)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.08em',
-                      borderRadius: 999,
-                      padding: '7px 16px',
-                      minHeight: 32,
-                      border: '1px solid',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                      background:  active ? 'var(--color-accent)' : 'transparent',
-                      borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
-                      color:       active ? 'var(--color-bg)' : 'var(--color-text-dim)',
-                      fontWeight:  active ? 600 : 400,
+                      background:    active ? 'var(--color-accent)' : 'transparent',
+                      borderColor:   active ? 'var(--color-accent)' : 'var(--color-border)',
+                      color:         active ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                      fontWeight:    active ? 600 : 400,
                     }}
                   >
                     {pt.label}

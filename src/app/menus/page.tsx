@@ -228,7 +228,15 @@ export default function MenusPage() {
     <div className="min-h-screen" style={{ background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', height: '100dvh' }}>
 
       {/* Fixed zone — does not scroll */}
-      <div style={{ flexShrink: 0 }}>
+      <div
+        style={{ flexShrink: 0 }}
+        onWheel={e => {
+          const el = scrollRef.current
+          if (!el) return
+          e.preventDefault()
+          el.scrollTop += e.deltaY
+        }}
+      >
         {/* Title + New menu */}
         <div
           className="px-5 pt-5 pb-3 border-b"
@@ -252,8 +260,8 @@ export default function MenusPage() {
             </div>
             <button
               onClick={() => { setSelectedMenu(null); setIsEditing(false); setSelectedRecipeId(null); setView('builder') }}
-              className="rounded-lg px-4 py-2 text-[11px] font-medium tracking-[0.04em]"
-              style={{ background: 'var(--color-accent)', color: 'var(--color-bg)', fontFamily: 'var(--font-geist-mono)' }}
+              className="rounded-lg font-semibold tracking-wide px-3 py-2 text-[12px] min-h-[36px] md:px-5 md:py-2.5 md:text-[13px] md:min-h-[40px]"
+              style={{ background: 'var(--color-accent)', color: '#fff', fontFamily: 'var(--font-geist-mono)' }}
             >
               + New menu
             </button>
@@ -268,16 +276,18 @@ export default function MenusPage() {
                 <button
                   key={tab.value}
                   onClick={() => setProteinFilter(tab.value)}
-                  className="shrink-0 rounded-md px-3 py-1 text-[10px] uppercase tracking-[0.08em] border transition-all"
+                  className="rounded-full border transition-colors px-3 py-1.5 text-[11px] min-h-[30px] md:px-4 md:py-[7px] md:text-[12px] md:min-h-[32px] shrink-0 whitespace-nowrap"
                   style={{
-                    fontFamily:  'var(--font-geist-mono)',
-                    background:  active
+                    fontFamily:      'var(--font-geist-mono)',
+                    letterSpacing:   '0.07em',
+                    textTransform:   'uppercase',
+                    background:      active
                       ? (pColor ? pColor.bg : 'rgba(90,107,66,0.2)')
                       : 'transparent',
-                    borderColor: active
+                    borderColor:     active
                       ? (pColor ? pColor.color : 'var(--color-accent)')
                       : 'var(--color-border)',
-                    color:       active
+                    color:           active
                       ? (pColor ? pColor.color : 'var(--color-accent)')
                       : 'var(--color-text-dim)',
                   }}

@@ -142,8 +142,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
           Already imported
         </p>
         <p
-          className="text-[11px] text-white/35"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="text-[11px]"
+          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
         >
           This URL was imported before. Review what changed.
         </p>
@@ -158,8 +158,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
             className="flex-1 rounded-lg py-2 text-[11px] uppercase tracking-[0.07em] transition-colors"
             style={{
               fontFamily: 'var(--font-geist-mono)',
-              background: viewMode === mode ? 'rgba(255,255,255,0.1)' : 'transparent',
-              color:      viewMode === mode ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
+              background: viewMode === mode ? 'var(--color-subtle)' : 'transparent',
+              color:      viewMode === mode ? 'var(--color-text)' : 'var(--color-text-dim)',
               fontWeight: viewMode === mode ? 600 : 400,
             }}
           >
@@ -177,8 +177,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
             <div className="flex flex-col items-center pt-10 gap-2">
               <span className="text-2xl">✓</span>
               <p
-                className="text-[12px] text-white/30"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
+                className="text-[12px]"
+                style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
               >
                 No changes detected
               </p>
@@ -189,18 +189,18 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                 <li
                   key={i}
                   className="rounded-xl px-4 py-3"
-                  style={{ background: 'rgba(255,255,255,0.03)' }}
+                  style={{ background: 'var(--color-subtle)' }}
                 >
                   <p
-                    className="text-[9px] uppercase tracking-[0.1em] text-white/25 mb-2"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    className="text-[9px] uppercase tracking-[0.1em] mb-2"
+                    style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                   >
                     {field.label}
                   </p>
                   <div className="flex flex-col gap-1">
                     <p
-                      className="text-[12px] text-white/35 line-through"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="text-[12px] line-through"
+                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                     >
                       {field.before}
                     </p>
@@ -229,8 +229,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                   className="flex-1 rounded-lg py-2 text-[11px] uppercase tracking-[0.07em] transition-colors"
                   style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    background: fullSide === side ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color:      fullSide === side ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
+                    background: fullSide === side ? 'var(--color-subtle)' : 'transparent',
+                    color:      fullSide === side ? 'var(--color-text)' : 'var(--color-text-dim)',
                     fontWeight: fullSide === side ? 600 : 400,
                   }}
                 >
@@ -248,7 +248,7 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                   <li
                     key={i}
                     className="flex items-baseline justify-between rounded-xl px-4 py-3"
-                    style={{ background: 'rgba(255,255,255,0.03)' }}
+                    style={{ background: 'var(--color-subtle)' }}
                   >
                     <span
                       className="text-[13px]"
@@ -257,8 +257,8 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
                       {ing.name}
                     </span>
                     <span
-                      className="ml-4 shrink-0 text-[12px] text-white/50"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="ml-4 shrink-0 text-[12px]"
+                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                     >
                       {formatAmount(amt)} {ing.unit}
                     </span>
@@ -281,8 +281,12 @@ function CachedComparison({ saved, reimported, onUseReimported, onKeepSaved }: C
         </button>
         <button
           onClick={onKeepSaved}
-          className="w-full rounded-2xl border border-white/10 py-4 text-[13px] tracking-[0.04em] text-white/50 transition-colors hover:text-white/80 hover:border-white/20"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+          className="w-full rounded-2xl border py-4 text-[13px] tracking-[0.04em] transition-opacity hover:opacity-90"
+          style={{
+            fontFamily:   'var(--font-geist-mono)',
+            borderColor:  'var(--color-border)',
+            color:        'var(--color-text-dim)',
+          }}
         >
           Keep saved version
         </button>
@@ -469,20 +473,21 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl border-t border-white/[0.06] transition-transform duration-300 ease-out ${
+        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
         style={{
-          background:    '#111',
-          maxHeight:     '90vh',
-          display:       'flex',
-          flexDirection: 'column',
-          overflow:      'hidden',
+          background:    'var(--color-surface)',
+          borderTop:       '1px solid var(--color-border)',
+          maxHeight:       '90vh',
+          display:         'flex',
+          flexDirection:   'column',
+          overflow:        'hidden',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full bg-white/10" />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
         </div>
 
         <div className="px-5 pt-2 pb-8 flex flex-col flex-1 min-h-0">
@@ -496,11 +501,18 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
               {drawerState === 'cached' ? 'Already imported' : 'Import recipe'}
             </h2>
             <button
+              type="button"
               onClick={handleClose}
-              className="text-[11px] text-white/30 hover:text-white/60 transition-colors"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              aria-label="Close"
+              className="flex items-center justify-center rounded-full border cursor-pointer flex-shrink-0 w-[44px] h-[44px] md:w-[36px] md:h-[36px] text-lg md:text-base transition-opacity hover:opacity-80"
+              style={{
+                background:  'var(--color-surface)',
+                borderColor: 'var(--color-border)',
+                color:         'var(--color-text-dim)',
+                fontFamily:    'var(--font-geist-mono)',
+              }}
             >
-              ✕
+              ×
             </button>
           </div>
 
@@ -516,8 +528,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     className="flex-1 rounded-lg py-2 text-[11px] uppercase tracking-[0.07em] transition-colors"
                     style={{
                       fontFamily: 'var(--font-geist-mono)',
-                      background: tab === t ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      color:      tab === t ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
+                      background: tab === t ? 'var(--color-subtle)' : 'transparent',
+                      color:      tab === t ? 'var(--color-text)' : 'var(--color-text-dim)',
                       fontWeight: tab === t ? 600 : 400,
                     }}
                   >
@@ -534,8 +546,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setUrlInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleUrlSubmit()}
                     placeholder="https://..."
-                    className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-full rounded-xl border px-4 py-3 text-[13px] placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)]"
+                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Import →" onClick={handleUrlSubmit} disabled={!urlInput.trim()} />
@@ -550,8 +562,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setTextInput(e.target.value)}
                     placeholder="Paste recipe text or Instagram caption…"
                     rows={7}
-                    className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20 resize-none"
-                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
+                    className="w-full rounded-xl border px-4 py-3 text-[13px] placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)] resize-none"
+                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Parse →" onClick={handleTextSubmit} disabled={!textInput.trim()} />
@@ -562,10 +574,11 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
               {tab === 'photo' && (
                 <div className="flex flex-col gap-3">
                   <div
-                    className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer ${
-                      dragOver ? 'border-[#f4a261]/60' : 'border-white/[0.10]'
-                    }`}
-                    style={{ background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent' }}
+                    className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer"
+                    style={{
+                      background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent',
+                      borderColor: dragOver ? 'rgba(244,162,97,0.6)' : 'var(--color-border)',
+                    }}
                     onClick={() => fileInputRef.current?.click()}
                     onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                     onDragLeave={() => setDragOver(false)}
@@ -576,14 +589,14 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                       if (file) handlePhotoFile(file)
                     }}
                   >
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                       <polyline points="17 8 12 3 7 8"/>
                       <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                     <p
-                      className="text-[12px] text-white/30 text-center"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="text-[12px] text-center"
+                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                     >
                       Drop image here or tap to select
                     </p>
@@ -608,11 +621,12 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
           {drawerState === 'loading' && (
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
               <div
-                className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#f4a261] animate-spin"
+                className="w-6 h-6 rounded-full border-2 animate-spin"
+                style={{ borderColor: 'var(--color-border)', borderTopColor: '#f4a261' }}
               />
               <p
-                className="text-[11px] text-white/30"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
+                className="text-[11px]"
+                style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
               >
                 Parsing recipe…
               </p>
