@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import type { Recipe } from '../../../types/recipe'
+import { isPantryStaple } from '../../lib/recipe-meta'
 
 type Step = 'anchor' | 'generating' | 'review' | 'swap'
 type ProteinType = 'kjott' | 'kylling' | 'fisk' | 'vegetar'
@@ -21,24 +22,12 @@ interface Props {
   isEditing?: boolean
 }
 
-const PANTRY_STAPLES = new Set([
-  'salt','pepper','oil','butter','garlic','onion','water',
-  'sugar','flour','eggs','egg','milk','cream','stock','broth',
-  'tomato paste','soy sauce','vinegar','lemon juice','olive oil',
-  'vegetable oil','baking powder','baking soda','cornstarch',
-  'honey','mustard','black pepper','white pepper',
-])
-
-function isStaple(name: string): boolean {
-  return PANTRY_STAPLES.has(name.toLowerCase().trim())
-}
-
 function computeShared(recipes: Recipe[]): Set<string> {
   const counts = new Map<string, number>()
   for (const r of recipes) {
     for (const ing of r.ingredients) {
       const key = ing.name.toLowerCase()
-      if (isStaple(key)) continue
+      if (isPantryStaple(key)) continue
       counts.set(key, (counts.get(key) ?? 0) + 1)
     }
   }
@@ -52,10 +41,10 @@ function computeShared(recipes: Recipe[]): Set<string> {
 function sharedWith(recipe: Recipe, others: Recipe[]): string[] {
   const pool = new Set(
     others.flatMap(r => r.ingredients.map(i => i.name.toLowerCase()))
-      .filter(n => !isStaple(n))
+      .filter(n => !isPantryStaple(n))
   )
   return recipe.ingredients
-    .filter(i => pool.has(i.name.toLowerCase()) && !isStaple(i.name))
+    .filter(i => pool.has(i.name.toLowerCase()) && !isPantryStaple(i.name))
     .map(i => i.name)
 }
 

@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { StoreSection } from './store-sections'
 import { getIngredientPreset } from './store-sections'
 import { normaliseIngredientName } from './ingredient-normaliser'
+import { isPantryStaple } from '../src/lib/recipe-meta'
 import type { Recipe, MenuWithRecipes } from '../types/recipe'
 
 export interface ShoppingListItem {
@@ -102,7 +103,9 @@ async function mergeIngredients(
 }
 
 export async function addRecipeToShoppingList(recipe: Recipe): Promise<void> {
-  const items: NewShoppingListItem[] = recipe.ingredients.map(ing => {
+  const items: NewShoppingListItem[] = recipe.ingredients
+    .filter(ing => !isPantryStaple(ing.name))
+    .map(ing => {
     const preset = getIngredientPreset(ing.name)
     return {
       name:             ing.name,
@@ -121,7 +124,9 @@ export async function addRecipeToShoppingList(recipe: Recipe): Promise<void> {
 
 export async function addMenuToShoppingList(menu: MenuWithRecipes): Promise<void> {
   const items: NewShoppingListItem[] = menu.recipes.flatMap(recipe =>
-    recipe.ingredients.map(ing => {
+    recipe.ingredients
+      .filter(ing => !isPantryStaple(ing.name))
+      .map(ing => {
       const preset = getIngredientPreset(ing.name)
       return {
         name:             ing.name,
