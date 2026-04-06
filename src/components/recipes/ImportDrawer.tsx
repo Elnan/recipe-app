@@ -546,8 +546,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setUrlInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleUrlSubmit()}
                     placeholder="https://..."
-                    className="w-full rounded-xl border px-4 py-3 text-[13px] placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)]"
-                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-full rounded-xl border px-4 py-3 placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)]"
+                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Import →" onClick={handleUrlSubmit} disabled={!urlInput.trim()} />
@@ -562,8 +562,8 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                     onChange={e => setTextInput(e.target.value)}
                     placeholder="Paste recipe text or Instagram caption…"
                     rows={7}
-                    className="w-full rounded-xl border px-4 py-3 text-[13px] placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)] resize-none"
-                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
+                    className="w-full rounded-xl border px-4 py-3 placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)] resize-none"
+                    style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
                   />
                   {error && <ErrorNote message={error} />}
                   <SubmitButton label="Parse →" onClick={handleTextSubmit} disabled={!textInput.trim()} />
@@ -605,6 +605,7 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       className="sr-only"
+                      style={{ fontSize: 16 }}
                       onChange={e => {
                         const file = e.target.files?.[0]
                         if (file) handlePhotoFile(file)

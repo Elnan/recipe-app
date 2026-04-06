@@ -597,8 +597,8 @@ export default function ShoppingPage() {
                     blurTimerRef.current = setTimeout(() => { setSearchFocused(false); blurTimerRef.current = null }, 150)
                   }}
                   placeholder="Add an ingredient…"
-                  className="flex-1 py-3 text-[14px] outline-none bg-transparent placeholder:text-[color:var(--color-text-dim)]"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
+                  className="flex-1 py-3 outline-none bg-transparent placeholder:text-[color:var(--color-text-dim)]"
+                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
                 />
               </div>
             </form>

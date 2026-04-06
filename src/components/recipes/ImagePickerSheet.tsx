@@ -74,9 +74,10 @@ export default function ImagePickerSheet({
 
       {/* Sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl border-t border-white/[0.06]"
+        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
         style={{
-          background:    '#111',
+          background:    'var(--color-surface)',
+          borderTop:     '1px solid var(--color-border)',
           maxHeight:     '80vh',
           display:       'flex',
           flexDirection: 'column',
@@ -85,7 +86,7 @@ export default function ImagePickerSheet({
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full bg-white/10" />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
         </div>
 
         <div className="px-5 pt-2 pb-8 flex flex-col flex-1 min-h-0 overflow-y-auto">
@@ -99,9 +100,10 @@ export default function ImagePickerSheet({
               Change image
             </h2>
             <button
+              type="button"
               onClick={onClose}
-              className="text-[11px] text-white/30 hover:text-white/60 transition-colors"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              className="text-[11px] transition-opacity hover:opacity-70"
+              style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
             >
               ✕
             </button>
@@ -116,8 +118,8 @@ export default function ImagePickerSheet({
                 className="flex-1 rounded-lg py-2 text-[11px] uppercase tracking-[0.07em] transition-colors"
                 style={{
                   fontFamily: 'var(--font-geist-mono)',
-                  background: tab === t ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color:      tab === t ? 'var(--color-text)' : 'rgba(255,255,255,0.3)',
+                  background: tab === t ? 'var(--color-subtle)' : 'transparent',
+                  color:      tab === t ? 'var(--color-text)' : 'var(--color-text-dim)',
                   fontWeight: tab === t ? 600 : 400,
                 }}
               >
@@ -130,10 +132,11 @@ export default function ImagePickerSheet({
           {tab === 'upload' && (
             <div className="flex flex-col gap-3">
               <div
-                className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer ${
-                  dragOver ? 'border-[#f4a261]/60' : 'border-white/[0.10]'
-                }`}
-                style={{ background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent' }}
+                className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer"
+                style={{
+                  background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent',
+                  borderColor: dragOver ? 'rgba(244,162,97,0.6)' : 'var(--color-border)',
+                }}
                 onClick={() => !uploading && fileInputRef.current?.click()}
                 onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
@@ -146,24 +149,27 @@ export default function ImagePickerSheet({
               >
                 {uploading ? (
                   <>
-                    <div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#f4a261] animate-spin" />
+                    <div
+                      className="w-6 h-6 rounded-full border-2 animate-spin"
+                      style={{ borderColor: 'var(--color-border)', borderTopColor: '#f4a261' }}
+                    />
                     <p
-                      className="text-[11px] text-white/30"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="text-[11px]"
+                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                     >
                       Uploading…
                     </p>
                   </>
                 ) : (
                   <>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                       <polyline points="17 8 12 3 7 8"/>
                       <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                     <p
-                      className="text-[12px] text-white/30 text-center"
-                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                      className="text-[12px] text-center"
+                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                     >
                       Drop image here or tap to select
                     </p>
@@ -174,6 +180,7 @@ export default function ImagePickerSheet({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   className="sr-only"
+                  style={{ fontSize: 16 }}
                   onChange={e => {
                     const file = e.target.files?.[0]
                     if (file) handleFile(file)
@@ -195,14 +202,14 @@ export default function ImagePickerSheet({
                 }}
                 onKeyDown={e => e.key === 'Enter' && handleUrlConfirm()}
                 placeholder="https://…"
-                className="w-full rounded-xl bg-white/[0.05] border px-4 py-3 text-[13px] placeholder:text-white/20 focus:outline-none focus:border-white/20"
-                style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+                className="w-full rounded-xl border px-4 py-3 placeholder:text-[color:var(--color-text-dim)] focus:outline-none focus:border-[color:var(--color-border)]"
+                style={{ background: 'var(--color-surface)', color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
               />
 
               {previewUrl && (
                 <div
                   className="relative w-full rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: '16/9', background: 'rgba(255,255,255,0.03)' }}
+                  style={{ aspectRatio: '16/9', background: 'var(--color-subtle)' }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -239,20 +246,20 @@ export default function ImagePickerSheet({
                       onClick={() => handleIconPick(key)}
                       className="flex flex-col items-center gap-2 rounded-2xl py-4 transition-colors"
                       style={{
-                        background:  active ? 'rgba(244,162,97,0.12)' : 'rgba(255,255,255,0.03)',
-                        border:      `1.5px solid ${active ? '#f4a261' : 'rgba(255,255,255,0.06)'}`,
+                        background:  active ? 'rgba(244,162,97,0.12)' : 'var(--color-subtle)',
+                        border:      `1.5px solid ${active ? '#f4a261' : 'var(--color-border)'}`,
                       }}
                     >
                       <RecipeIcon
                         icon={key}
-                        color={active ? '#f4a261' : 'rgba(255,255,255,0.4)'}
+                        color={active ? '#f4a261' : 'var(--color-text-dim)'}
                         size={32}
                       />
                       <span
                         className="text-[9px] uppercase tracking-[0.07em]"
                         style={{
                           fontFamily: 'var(--font-geist-mono)',
-                          color: active ? '#f4a261' : 'rgba(255,255,255,0.3)',
+                          color: active ? '#f4a261' : 'var(--color-text-dim)',
                         }}
                       >
                         {RECIPE_ICON_LABELS[key]}

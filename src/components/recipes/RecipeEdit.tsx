@@ -226,10 +226,11 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             value={draft.title}
             onChange={e => set('title', e.target.value)}
             placeholder="Recipe title"
-            className={`w-full bg-transparent text-[26px] font-bold leading-tight focus:outline-none ${hasHeroPhoto ? 'text-white placeholder:text-[color:var(--color-text-dim)]' : 'text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)]'}`}
+            className={`w-full bg-transparent font-bold leading-tight focus:outline-none ${hasHeroPhoto ? 'text-white placeholder:text-[color:var(--color-text-dim)]' : 'text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)]'}`}
             style={{
               fontFamily:  'var(--font-geist-sans)',
               textShadow:  hasHeroPhoto ? '0 2px 8px rgba(0,0,0,0.6)' : 'none',
+              fontSize:    26,
             }}
           />
         </div>
@@ -292,8 +293,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             onChange={e => set('description', e.target.value || undefined)}
             placeholder="Brief description…"
             rows={3}
-            className="w-full rounded-xl border px-4 py-3 text-[13px] focus:outline-none resize-none"
-            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-sans)' }}
+            className="w-full rounded-xl border px-4 py-3 focus:outline-none resize-none"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
           />
         </div>
 
@@ -331,8 +332,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             value={draft.cuisine ?? ''}
             onChange={e => set('cuisine', e.target.value || undefined)}
             placeholder="e.g. Italian, Norwegian, Mexican…"
-            className="w-full rounded-xl border px-4 py-3 text-[13px] focus:outline-none"
-            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-mono)' }}
+            className="w-full rounded-xl border px-4 py-3 focus:outline-none"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', background: 'var(--color-surface)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
           />
         </div>
 
@@ -369,8 +370,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     value={ing.name}
                     onChange={e => updateIngredient(i, { name: e.target.value })}
                     placeholder="Ingredient"
-                    className="flex-1 min-w-0 bg-transparent text-[13px] focus:outline-none border-b pb-1"
-                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)' }}
+                    className="flex-1 min-w-0 bg-transparent focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
                   />
 
                   {/* Amount */}
@@ -380,8 +381,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     min={0}
                     step="any"
                     onChange={e => updateIngredient(i, { amount: parseFloat(e.target.value) || 0 })}
-                    className="w-14 bg-transparent text-[13px] text-right focus:outline-none border-b pb-1"
-                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-14 bg-transparent text-right focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
                   />
 
                   {/* Unit */}
@@ -389,8 +390,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     value={ing.unit}
                     onChange={e => updateIngredient(i, { unit: e.target.value })}
                     placeholder="unit"
-                    className="w-14 bg-transparent text-[13px] focus:outline-none border-b pb-1"
-                    style={{ color: 'var(--color-text-dim)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+                    className="w-14 bg-transparent focus:outline-none border-b pb-1"
+                    style={{ color: 'var(--color-text-dim)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
                   />
 
                   {/* Delete */}
@@ -408,8 +409,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                   value={ing.notes ?? ''}
                   onChange={e => updateIngredient(i, { notes: e.target.value || undefined })}
                   placeholder="Notes (optional)"
-                  className="mt-2 w-full bg-transparent text-[11px] focus:outline-none pl-6"
-                  style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-sans)' }}
+                  className="mt-2 w-full bg-transparent focus:outline-none pl-6"
+                  style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
                 />
               </div>
             ))}
@@ -449,8 +450,8 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     onChange={e => updateStep(i, { instruction: e.target.value })}
                     placeholder="Step instruction…"
                     rows={2}
-                    className="flex-1 bg-transparent text-[13px] leading-snug focus:outline-none resize-none"
-                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
+                    className="flex-1 bg-transparent leading-snug focus:outline-none resize-none"
+                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)', fontSize: 16 }}
                   />
 
                   {/* Reorder + delete */}
@@ -723,8 +724,8 @@ function EditableNumber({ label, value, min, onChange, nullable }: EditableNumbe
             onChange={e => setRaw(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            className="w-12 bg-transparent text-center text-[18px] font-semibold focus:outline-none border-b"
-            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)' }}
+            className="w-12 bg-transparent text-center font-semibold focus:outline-none border-b"
+            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 18 }}
           />
         ) : (
           <button

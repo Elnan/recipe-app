@@ -321,16 +321,24 @@ export default function RecipeDetail({ recipe, onRecipeUpdate, onBack }: RecipeD
             }}
           >
             {currentRecipe.cooking_method && (
-              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', padding: '9px 20px' }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '9px 20px' }}>
                 <span
-                  className="text-[10px] uppercase tracking-[0.08em]"
+                  className="text-[10px] uppercase tracking-[0.08em] shrink-0"
                   style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
                 >
                   Method
                 </span>
                 <span
-                  className="text-[13px]"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-geist-sans)' }}
+                  className="text-[13px] min-w-0"
+                  style={{
+                    color:         'var(--color-text)',
+                    fontFamily:    'var(--font-geist-sans)',
+                    overflow:      'hidden',
+                    textOverflow:  'ellipsis',
+                    whiteSpace:    'nowrap',
+                    textAlign:     'right',
+                  }}
+                  title={methodDisplay}
                 >
                   {methodDisplay}
                 </span>
