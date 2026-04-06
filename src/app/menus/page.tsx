@@ -301,10 +301,10 @@ export default function MenusPage() {
 
         {/* Active menu collapsing card */}
         {activeMenu && (
-          <div className="px-4 pt-3 pb-0">
+          <div className="px-3 pt-1 pb-0">
             {/* "This week" label — fades out */}
             <p
-              className="text-[9px] uppercase tracking-[0.1em] mb-1.5 pl-1"
+              className="text-[9px] uppercase tracking-[0.1em] mb-1 pl-0.5"
               style={{
                 fontFamily: 'var(--font-geist-mono)',
                 color:      'var(--color-text-dim)',
@@ -324,7 +324,7 @@ export default function MenusPage() {
                 padding:      0,
                 background:   'var(--color-surface)',
                 border:       '1.5px solid rgba(90,107,66,0.5)',
-                borderRadius: 16,
+                borderRadius: progress > 0.85 ? 12 : 16,
                 overflow:     'hidden',
                 transition:   'border-radius 0.2s ease',
               }}
@@ -359,19 +359,26 @@ export default function MenusPage() {
                 ))}
               </div>
 
-              {/* Card body — always visible */}
-              <div style={{ padding: '10px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Card body — always visible; padding tightens as card compacts */}
+              <div
+                style={{
+                  padding: `${Math.max(4, Math.round(10 - 6 * progress))}px ${Math.max(8, Math.round(14 - 5 * progress))}px`,
+                  transition: 'padding 0.1s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: progress > 0.85 ? 6 : 8 }}>
                   <span
                     style={{
                       color:        'var(--color-text)',
-                      fontSize:     15,
+                      fontSize:     progress > 0.85 ? 14 : 15,
                       fontWeight:   600,
                       fontFamily:   'Georgia, serif',
                       flex:         1,
+                      minWidth:     0,
                       whiteSpace:   'nowrap',
                       overflow:     'hidden',
                       textOverflow: 'ellipsis',
+                      lineHeight:   1.2,
                     }}
                   >
                     {activeMenu.name}
@@ -387,7 +394,7 @@ export default function MenusPage() {
                     display:       'flex',
                     flexDirection: 'column',
                     gap:           2,
-                    marginTop:     progress < 1 ? 6 : 0,
+                    marginTop:     progress < 1 ? 4 : 0,
                     maxHeight:     Math.round(80 * (1 - progress)),
                     opacity:       1 - progress,
                     overflow:      'hidden',
@@ -410,7 +417,7 @@ export default function MenusPage() {
 
         {/* "All menus" divider */}
         {otherMenus.length > 0 && (
-          <div className="px-5 pt-4 pb-2">
+          <div className="px-4 pt-2 pb-1.5">
             <span
               className="text-[9px] uppercase tracking-[0.1em]"
               style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
