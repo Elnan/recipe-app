@@ -68,11 +68,11 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Recipes mobile search: keyboard open — hide fixed bottom navs, reclaim scroll padding */
-body[data-recipes-mobile-search-focus] {
+/* Shopping: keyboard open — hide fixed bottom navs, reclaim scroll padding */
+body[data-shopping-search-focus] {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-body[data-recipes-mobile-search-focus] [data-app-bottom-nav] {
+body[data-shopping-search-focus] [data-app-bottom-nav] {
   visibility: hidden;
   pointer-events: none;
   transform: translateY(100%);

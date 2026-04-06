@@ -40,11 +40,11 @@ export default function RecipesPage() {
   const [importDrawerOpen,  setImportDrawerOpen]  = useState(false)
   const [importPrefillText, setImportPrefillText] = useState<string | undefined>()
   const [importDefaultTab,  setImportDefaultTab]  = useState<'url' | 'text' | 'photo' | undefined>()
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [mobileSearchFocused, setMobileSearchFocused] = useState(false)
-  const [vvKeyboardGap, setVvKeyboardGap] = useState(0)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const searchBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [searchOpen,        setSearchOpen]        = useState(false)
+  const [contentVisible,    setContentVisible]    = useState(false)
+  const inputRef      = useRef<HTMLInputElement>(null)
+  const openTimerRef  = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     getRecipes()
@@ -98,35 +98,6 @@ export default function RecipesPage() {
     })
   }, [allRecipes, activeCategory, activeProtein, search, filters])
 
-  useEffect(() => {
-    if (mobileSearchFocused && searchOpen) {
-      document.body.setAttribute('data-recipes-mobile-search-focus', '')
-    } else {
-      document.body.removeAttribute('data-recipes-mobile-search-focus')
-    }
-    return () => document.body.removeAttribute('data-recipes-mobile-search-focus')
-  }, [mobileSearchFocused, searchOpen])
-
-  useEffect(() => {
-    if (!searchOpen || !mobileSearchFocused) {
-      setVvKeyboardGap(0)
-      return
-    }
-    const vv = window.visualViewport
-    if (!vv) return
-    const sync = () => {
-      const gap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
-      setVvKeyboardGap(gap)
-    }
-    sync()
-    vv.addEventListener('resize', sync)
-    vv.addEventListener('scroll', sync)
-    return () => {
-      vv.removeEventListener('resize', sync)
-      vv.removeEventListener('scroll', sync)
-    }
-  }, [searchOpen, mobileSearchFocused])
-
   // Active filter pills
   const filterPills: Array<{ label: string; onRemove: () => void }> = []
   if (filters.cooking_method) {
@@ -165,37 +136,19 @@ export default function RecipesPage() {
   })
 
   function openSearch() {
-    if (searchBlurTimerRef.current) {
-      clearTimeout(searchBlurTimerRef.current)
-      searchBlurTimerRef.current = null
-    }
+    clearTimeout(closeTimerRef.current)
     setSearchOpen(true)
     requestAnimationFrame(() => inputRef.current?.focus())
+    openTimerRef.current = setTimeout(() => setContentVisible(true), 220)
   }
 
   function closeSearch() {
-    if (searchBlurTimerRef.current) {
-      clearTimeout(searchBlurTimerRef.current)
-      searchBlurTimerRef.current = null
-    }
-    setMobileSearchFocused(false)
-    setSearchOpen(false)
-    setSearch('')
-  }
-
-  function handleMobileSearchFocus() {
-    if (searchBlurTimerRef.current) {
-      clearTimeout(searchBlurTimerRef.current)
-      searchBlurTimerRef.current = null
-    }
-    setMobileSearchFocused(true)
-  }
-
-  function handleMobileSearchBlur() {
-    searchBlurTimerRef.current = setTimeout(() => {
-      setMobileSearchFocused(false)
-      searchBlurTimerRef.current = null
-    }, 200)
+    clearTimeout(openTimerRef.current)
+    setContentVisible(false)
+    closeTimerRef.current = setTimeout(() => {
+      setSearchOpen(false)
+      setSearch('')
+    }, 60)
   }
 
   return (
@@ -446,150 +399,142 @@ export default function RecipesPage() {
         )}
       </div>
 
-      {/* Mobile search — FAB when collapsed; full-width dock + visualViewport when open (nav hidden while focused) */}
+      {/* Fixed search FAB — mobile only */}
       <div className="block sm:hidden">
-        {!searchOpen ? (
-          <button
-            type="button"
-            onClick={openSearch}
-            aria-label="Open search"
-            style={{
-              position:       'fixed',
-              bottom:         80,
-              right:          14,
-              zIndex:         20,
-              width:          48,
-              height:         48,
-              borderRadius:   24,
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              background:     'var(--color-accent)',
-              color:          'white',
-              border:         'none',
-              cursor:         'pointer',
-              boxShadow:      '0 2px 8px rgba(0,0,0,0.18)',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </button>
-        ) : (
+      <div
+        style={{
+          position:    'fixed',
+          bottom:      80,
+          right:       14,
+          zIndex:      20,
+          display:     'flex',
+          alignItems:  'center',
+          filter:      'drop-shadow(0 2px 8px rgba(0,0,0,0.18))',
+        }}
+      >
+        {/* Input area — expands leftward */}
+        <div
+          style={{
+            width:        searchOpen ? 240 : 0,
+            height:       48,
+            overflow:     'hidden',
+            borderRadius: '24px 0 0 24px',
+            borderTop:    searchOpen ? '1.5px solid var(--color-accent)' : 'none',
+            borderBottom: searchOpen ? '1.5px solid var(--color-accent)' : 'none',
+            borderLeft:   searchOpen ? '1.5px solid var(--color-accent)' : 'none',
+            borderRight:  'none',
+            background:   '#fff',
+            display:      'flex',
+            alignItems:   'center',
+            transition:   searchOpen
+              ? 'width 0.30s cubic-bezier(0.4,0,0.2,1), border-color 0.20s ease, background 0.20s ease'
+              : 'width 0.18s cubic-bezier(0.4,0,1,1), border-color 0.14s ease, background 0.14s ease',
+          }}
+        >
           <div
             style={{
-              position:   'fixed',
-              left:       0,
-              right:      0,
-              zIndex:     40,
-              bottom:     mobileSearchFocused ? vvKeyboardGap + 8 : 80,
-              padding:    '0 12px',
-              paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+              display:       'flex',
+              alignItems:    'center',
+              width:         '100%',
+              paddingLeft:   14,
+              paddingRight:  8,
+              gap:           8,
+              opacity:       contentVisible ? 1 : 0,
+              transition:    contentVisible ? 'opacity 0.12s ease' : 'opacity 0.10s ease',
+              pointerEvents: contentVisible ? 'auto' : 'none',
+              whiteSpace:    'nowrap',
             }}
           >
-            <div
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input
+              ref={inputRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') closeSearch() }}
+              placeholder="Search recipes…"
+              className="placeholder:text-[rgba(26,26,22,0.35)]"
               style={{
-                display:       'flex',
-                alignItems:    'center',
-                gap:           8,
-                minHeight:     48,
-                padding:       '10px 12px 10px 14px',
-                borderRadius:  24,
-                border:        '1.5px solid var(--color-accent)',
-                background:    'var(--color-surface)',
-                boxShadow:     '0 2px 12px rgba(0,0,0,0.12)',
+                flex:       1,
+                minWidth:   0,
+                background: 'transparent',
+                border:     'none',
+                outline:    'none',
+                fontSize:   16,
+                color:      '#1a1a16',
+                fontFamily: 'var(--font-geist-sans)',
               }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input
-                ref={inputRef}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onFocus={handleMobileSearchFocus}
-                onBlur={handleMobileSearchBlur}
-                onKeyDown={e => { if (e.key === 'Escape') closeSearch() }}
-                placeholder="Search recipes…"
-                className="placeholder:text-[color:var(--color-text-dim)]"
-                style={{
-                  flex:         1,
-                  minWidth:     0,
-                  background:   'transparent',
-                  border:       'none',
-                  outline:      'none',
-                  fontSize:     16,
-                  color:        'var(--color-text)',
-                  fontFamily:   'var(--font-geist-sans)',
-                }}
-              />
-              {search && (
-                <button
-                  type="button"
-                  onPointerDown={e => e.preventDefault()}
-                  onClick={() => setSearch('')}
-                  style={{
-                    flexShrink: 0,
-                    color:      'var(--color-text-dim)',
-                    fontSize:   16,
-                    lineHeight: 1,
-                    padding:    4,
-                    background: 'none',
-                    border:     'none',
-                    cursor:     'pointer',
-                  }}
-                >
-                  ✕
-                </button>
-              )}
+            />
+            {search && (
               <button
-                type="button"
-                onPointerDown={e => e.preventDefault()}
-                onClick={() => setDrawerOpen(true)}
-                aria-label="Open filters"
+                onClick={() => setSearch('')}
                 style={{
-                  flexShrink:     0,
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  width:          32,
-                  height:         32,
-                  padding:        0,
-                  background:     'none',
-                  border:         'none',
-                  cursor:         'pointer',
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
-                  <path
-                    d="M1 3h10M2.5 6h7M4 9h4"
-                    stroke={filterPills.length > 0 ? 'var(--color-accent)' : 'var(--color-text-dim)'}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={closeSearch}
-                aria-label="Close search"
-                style={{
-                  flexShrink:     0,
-                  width:          36,
-                  height:         36,
-                  borderRadius:   18,
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  background:     'var(--color-accent)',
-                  color:          'white',
-                  fontSize:       18,
-                  lineHeight:     1,
-                  border:         'none',
-                  cursor:         'pointer',
+                  flexShrink: 0,
+                  color:      'rgba(26,26,22,0.4)',
+                  fontSize:   14,
+                  lineHeight: 1,
+                  padding:    4,
+                  background: 'none',
+                  border:     'none',
+                  cursor:     'pointer',
                 }}
               >
                 ✕
               </button>
-            </div>
+            )}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open filters"
+              style={{
+                flexShrink:     0,
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                width:          32,
+                height:         32,
+                padding:        0,
+                background:     'none',
+                border:         'none',
+                cursor:         'pointer',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M1 3h10M2.5 6h7M4 9h4"
+                  stroke={filterPills.length > 0 ? 'var(--color-accent)' : 'rgba(90,107,66,0.45)'}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Olive cap */}
+        <button
+          onClick={searchOpen ? closeSearch : openSearch}
+          aria-label={searchOpen ? 'Close search' : 'Open search'}
+          style={{
+            width:          48,
+            height:         48,
+            flexShrink:     0,
+            background:     'var(--color-accent)',
+            borderRadius:   searchOpen ? '0 24px 24px 0' : 24,
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            color:          'white',
+            fontSize:       20,
+            lineHeight:     1,
+            border:         'none',
+            cursor:         'pointer',
+            transition:     searchOpen
+              ? 'border-radius 0.30s cubic-bezier(0.4,0,0.2,1)'
+              : 'border-radius 0.08s cubic-bezier(0.4,0,1,1) 0.12s',
+          }}
+        >
+          {searchOpen ? '✕' : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>}
+        </button>
+      </div>
       </div>
 
       {/* Filter drawer */}

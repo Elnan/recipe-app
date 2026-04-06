@@ -51,6 +51,7 @@ export default function ShoppingPage() {
   const [mergeTargetId, setMergeTargetId]     = useState<string | null>(null)
 
   const [searchFocused, setSearchFocused]     = useState(false)
+  const [vvKeyboardGap, setVvKeyboardGap]     = useState(0)
   const [panelHeight, setPanelHeight]         = useState(0)
   const panelRef    = useRef<HTMLDivElement>(null)
   const inputRef    = useRef<HTMLInputElement>(null)
@@ -103,6 +104,34 @@ export default function ShoppingPage() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!searchFocused) {
+      setVvKeyboardGap(0)
+      return
+    }
+    const vv = window.visualViewport
+    if (!vv) return
+    const sync = () => {
+      setVvKeyboardGap(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    sync()
+    vv.addEventListener('resize', sync)
+    vv.addEventListener('scroll', sync)
+    return () => {
+      vv.removeEventListener('resize', sync)
+      vv.removeEventListener('scroll', sync)
+    }
+  }, [searchFocused])
+
+  useEffect(() => {
+    if (searchFocused) {
+      document.body.setAttribute('data-shopping-search-focus', '')
+    } else {
+      document.body.removeAttribute('data-shopping-search-focus')
+    }
+    return () => document.body.removeAttribute('data-shopping-search-focus')
+  }, [searchFocused])
 
   const mergeSource = items.find(i => i.id === mergeSourceId) ?? null
   const mergeTarget = items.find(i => i.id === mergeTargetId) ?? null
@@ -477,7 +506,11 @@ export default function ShoppingPage() {
       <div
         ref={panelRef}
         className="fixed left-0 right-0 z-30"
-        style={{ bottom: 64, background: 'var(--color-bg)', borderTop: '1px solid var(--color-border)' }}
+        style={{
+          bottom:    searchFocused ? vvKeyboardGap + 8 : 64,
+          background: 'var(--color-bg)',
+          borderTop: '1px solid var(--color-border)',
+        }}
       >
         {/* Merge mode banner */}
         {mergeSourceId && !mergeTargetId && (
