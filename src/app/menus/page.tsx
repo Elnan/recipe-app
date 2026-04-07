@@ -46,9 +46,11 @@ export default function MenusPage() {
   const [isEditing, setIsEditing]         = useState(false)
   const [proteinFilter, setProteinFilter] = useState<ProteinFilter>('all')
   const [scrollY, setScrollY]             = useState(0)
+  const [displayProgress, setDisplayProgress] = useState(0)
   const [visibleCount, setVisibleCount]   = useState(PAGE_SIZE)
   const scrollRef    = useRef<HTMLDivElement>(null)
   const sentinelRef  = useRef<HTMLDivElement>(null)
+  const smoothProgress = useRef(0)
 
   useEffect(() => {
     Promise.all([
@@ -152,10 +154,16 @@ export default function MenusPage() {
   const hasMore       = visibleCount < otherMenus.length
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setScrollY((e.target as HTMLDivElement).scrollTop)
+    const el = e.currentTarget
+    const top = el.scrollTop
+    setScrollY(top)
+    const raw = Math.min(1, top / 100)
+    requestAnimationFrame(() => {
+      const lerp = smoothProgress.current + (raw - smoothProgress.current) * 0.3
+      smoothProgress.current = lerp
+      setDisplayProgress(lerp)
+    })
   }, [])
-
-  const progress = Math.min(1, scrollY / 100)
 
   // ── Views ────────────────────────────────────────────────────────────────
 
@@ -305,7 +313,7 @@ export default function MenusPage() {
               top:           0,
               zIndex:        10,
               background:    'var(--color-bg)',
-              paddingBottom: 8,
+              paddingBottom: Math.round(8 - displayProgress * 6),
             }}
           >
             <div className="px-3 pt-1 pb-0">
@@ -315,9 +323,9 @@ export default function MenusPage() {
                 style={{
                   fontFamily:     'var(--font-geist-mono)',
                   color:          'var(--color-text-dim)',
-                  opacity:        1 - progress,
-                  height:         progress >= 1 ? 0 : 18,
-                  marginBottom:   progress >= 1 ? 0 : 4,
+                  opacity:        1 - displayProgress,
+                  height:         displayProgress >= 1 ? 0 : 18,
+                  marginBottom:   displayProgress >= 1 ? 0 : 4,
                   transition:     'opacity 0.15s ease-out, height 0.15s ease-out',
                 }}
               >
@@ -333,7 +341,7 @@ export default function MenusPage() {
                   padding:      0,
                   background:   'var(--color-surface)',
                   border:       '1.5px solid rgba(90,107,66,0.5)',
-                  borderRadius: progress > 0.85 ? 12 : 16,
+                  borderRadius: displayProgress > 0.85 ? 12 : 16,
                   overflow:     'hidden',
                   transition:   'border-radius 0.2s ease',
                 }}
@@ -345,10 +353,10 @@ export default function MenusPage() {
                     gridTemplateColumns:  '1fr 1fr',
                     gridTemplateRows:     '1fr 1fr',
                     gap:                  2,
-                    height:               Math.round(160 * (1 - progress)),
+                    height:               Math.round(160 * (1 - displayProgress)),
                     overflow:             'hidden',
                     transition:           'height 0.2s ease-out, opacity 0.2s ease-out',
-                    opacity:              1 - progress,
+                    opacity:              1 - displayProgress,
                   }}
                 >
                   {Array.from({ length: 4 }, (_, i) => activeMenu.recipes[i] ?? null).map((recipe, i) => (
@@ -371,7 +379,7 @@ export default function MenusPage() {
                 {/* Card body — always visible; padding tightens as card compacts */}
                 <div
                   style={{
-                    padding:    `${Math.round(10 - progress * 4)}px 14px`,
+                    padding:    `${Math.round(10 - displayProgress * 5)}px ${Math.round(14 - displayProgress * 4)}px`,
                     transition: 'padding 0.2s ease-out',
                   }}
                 >
@@ -379,14 +387,14 @@ export default function MenusPage() {
                     style={{
                       display:      'flex',
                       alignItems:   'center',
-                      gap:          progress > 0.85 ? 6 : 8,
-                      marginBottom: progress > 0.8 ? 0 : 6,
+                      gap:          displayProgress > 0.85 ? 6 : 8,
+                      marginBottom: displayProgress > 0.8 ? 0 : 6,
                     }}
                   >
                     <span
                       style={{
                         color:        'var(--color-text)',
-                        fontSize:     progress > 0.85 ? 14 : 15,
+                        fontSize:     displayProgress > 0.85 ? 14 : 15,
                         fontWeight:   600,
                         fontFamily:   'Georgia, serif',
                         flex:         1,
@@ -410,9 +418,9 @@ export default function MenusPage() {
                       display:       'flex',
                       flexDirection: 'column',
                       gap:           2,
-                      marginTop:     progress < 1 ? 4 : 0,
-                      maxHeight:     Math.round(80 * (1 - progress)),
-                      opacity:       1 - progress,
+                      marginTop:     displayProgress < 1 ? 4 : 0,
+                      maxHeight:     Math.round(80 * (1 - displayProgress)),
+                      opacity:       1 - displayProgress,
                       overflow:      'hidden',
                       transition:    'max-height 0.2s ease-out, opacity 0.2s ease-out',
                     }}
@@ -432,7 +440,10 @@ export default function MenusPage() {
 
             {/* "All menus" divider — inside sticky when active week exists */}
             {otherMenus.length > 0 && (
-              <div className="px-4 pt-2 pb-1.5">
+              <div
+                className="px-4 pb-1.5"
+                style={{ marginTop: Math.round(8 - displayProgress * 6) }}
+              >
                 <span
                   className="text-[9px] uppercase tracking-[0.1em]"
                   style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
