@@ -82,13 +82,6 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
     onChange({})
   }
 
-  const hasFilters =
-    filters.cooking_method != null ||
-    filters.cuisine != null ||
-    filters.max_time_minutes != null ||
-    filters.min_rating != null ||
-    (filters.dietary && filters.dietary.length > 0)
-
   return (
     <>
       {/* Backdrop */}
@@ -105,14 +98,23 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
         className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
-        style={{ maxHeight: '85vh', overflowY: 'auto', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '85vh',
+          background: 'var(--color-surface)',
+          borderTop: '1px solid var(--color-border)',
+        }}
       >
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex shrink-0 justify-center pt-3 pb-1">
           <div className="w-9 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
         </div>
 
-        <div className="px-5 pt-2 pb-10">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 pb-4"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2
@@ -121,15 +123,6 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
             >
               Filters
             </h2>
-            {hasFilters && (
-              <button
-                onClick={clearAll}
-                className="text-[11px] transition-colors"
-                style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
-              >
-                Clear all
-              </button>
-            )}
           </div>
 
           {/* Cooking method */}
@@ -208,6 +201,57 @@ export default function FilterDrawer({ open, filters, onChange, onClose }: Filte
               ))}
             </div>
           </Section>
+        </div>
+
+        {/* Sticky footer */}
+        <div
+          style={{
+            position: 'sticky',
+            bottom: 0,
+            flexShrink: 0,
+            background: 'var(--color-surface)',
+            borderTop: '1px solid var(--color-border)',
+            padding: '12px 20px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            display: 'flex',
+            gap: 10,
+          }}
+        >
+          <button
+            type="button"
+            onClick={clearAll}
+            style={{
+              flex: 1,
+              padding: '13px',
+              borderRadius: 12,
+              border: '1px solid var(--color-border)',
+              background: 'transparent',
+              fontFamily: 'var(--font-geist-mono)',
+              fontSize: 13,
+              color: 'var(--color-text-dim)',
+              cursor: 'pointer',
+            }}
+          >
+            Clear all
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              flex: 2,
+              padding: '13px',
+              borderRadius: 12,
+              border: 'none',
+              background: 'var(--color-accent)',
+              fontFamily: 'var(--font-geist-mono)',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            Show results
+          </button>
         </div>
       </div>
     </>
