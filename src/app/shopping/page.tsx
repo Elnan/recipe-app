@@ -266,20 +266,22 @@ export default function ShoppingPage() {
     if (sourceFilter?.id === id) setSourceFilter(null)
   }
 
-  // ── Remove single shopping item (immediate) ───────────────────────────────
+  // ── Remove single shopping item (immediate) — unlike check-off, do not add to
+  // recentlyRemoved; delete shopping row + ingredient_products cache for this name.
   function handleRemove(item: ShoppingListItem) {
+    const key = item.name.toLowerCase()
     setItems(prev => prev.filter(i => i.id !== item.id))
-    setRecentlyRemoved(prev =>
-      [{ name: item.name, amount: item.amount, unit: item.unit, store_section: item.store_section },
-        ...prev].slice(0, 9),
-    )
+    setRecentlyRemoved(prev => prev.filter(r => r.name.toLowerCase() !== key))
     const timer = checkingTimers.current.get(item.id)
     if (timer) clearTimeout(timer)
     checkingTimers.current.delete(item.id)
     setChecking(prev => { const next = new Set(prev); next.delete(item.id); return next })
+
+    const qIng = `/api/ingredients?name=${encodeURIComponent(item.name)}`
     if (!item.id.startsWith('temp-')) {
       fetch(`/api/shopping/${item.id}`, { method: 'DELETE' })
     }
+    fetch(qIng, { method: 'DELETE' }).catch(() => {})
   }
 
   // ── Merge ─────────────────────────────────────────────────────────────────

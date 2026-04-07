@@ -130,3 +130,14 @@ export async function saveIngredientSection(
   )
   if (error) throw error
 }
+
+/** Removes learned/cached row for this ingredient (section, Kassal fields, etc.). */
+export async function removeIngredientProduct(name: string): Promise<void> {
+  const key = name.toLowerCase().trim()
+  if (!key) return
+  const { error } = await supabase
+    .from('ingredient_products')
+    .delete()
+    .eq('ingredient_name', key)
+  if (error) throw error
+}
