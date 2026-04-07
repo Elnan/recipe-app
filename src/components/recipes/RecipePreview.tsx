@@ -95,8 +95,8 @@ export default function RecipePreview({ recipe, onSave, onBack }: RecipePreviewP
             className="flex-1 rounded-lg py-2 text-[11px] uppercase tracking-[0.07em] transition-colors"
             style={{
               fontFamily: 'var(--font-geist-mono)',
-              background: activeTab === tab ? '#f4a261' : 'transparent',
-              color:      activeTab === tab ? '#0a0a0a' : 'rgba(255,255,255,0.3)',
+              background: activeTab === tab ? 'var(--color-accent)' : 'transparent',
+              color:      activeTab === tab ? '#fff' : 'var(--color-text-dim)',
               fontWeight: activeTab === tab ? 600 : 400,
             }}
           >
