@@ -227,16 +227,8 @@ export default function MenusPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', height: '100dvh' }}>
 
-      {/* Fixed zone — does not scroll */}
-      <div
-        style={{ flexShrink: 0 }}
-        onWheel={e => {
-          const el = scrollRef.current
-          if (!el) return
-          e.preventDefault()
-          el.scrollTop += e.deltaY
-        }}
-      >
+      {/* Header — fixed, does not scroll */}
+      <div style={{ flexShrink: 0 }}>
         {/* Title + New menu */}
         <div
           className="px-5 pt-5 pb-3 border-b"
@@ -298,125 +290,161 @@ export default function MenusPage() {
             })}
           </div>
         </div>
+      </div>
 
-        {/* Active menu collapsing card */}
+      {/* Scroll: sticky active card + menu list */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}
+      >
         {activeMenu && (
-          <div className="px-3 pt-1 pb-0">
-            {/* "This week" label — fades out */}
-            <p
-              className="text-[9px] uppercase tracking-[0.1em] mb-1 pl-0.5"
-              style={{
-                fontFamily: 'var(--font-geist-mono)',
-                color:      'var(--color-text-dim)',
-                opacity:    1 - progress,
-                transition: 'opacity 0.15s ease',
-              }}
-            >
-              This week
-            </p>
-
-            <button
-              onClick={() => { setSelectedMenu(activeMenu); setSelectedRecipeId(null); setView('detail') }}
-              style={{
-                width:        '100%',
-                textAlign:    'left' as const,
-                cursor:       'pointer',
-                padding:      0,
-                background:   'var(--color-surface)',
-                border:       '1.5px solid rgba(90,107,66,0.5)',
-                borderRadius: progress > 0.85 ? 12 : 16,
-                overflow:     'hidden',
-                transition:   'border-radius 0.2s ease',
-              }}
-            >
-              {/* Image grid — collapses */}
-              <div
+          <div
+            style={{
+              position:      'sticky',
+              top:           0,
+              zIndex:        10,
+              background:    'var(--color-bg)',
+              paddingBottom: 8,
+            }}
+          >
+            <div className="px-3 pt-1 pb-0">
+              {/* "This week" label — fades out */}
+              <p
+                className="text-[9px] uppercase tracking-[0.1em] pl-0.5 overflow-hidden"
                 style={{
-                  display:              'grid',
-                  gridTemplateColumns:  '1fr 1fr',
-                  gridTemplateRows:     '1fr 1fr',
-                  gap:                  2,
-                  height:               Math.round(160 * (1 - progress)),
-                  overflow:             'hidden',
-                  transition:           'height 0.1s ease',
-                  opacity:              1 - progress,
+                  fontFamily:     'var(--font-geist-mono)',
+                  color:          'var(--color-text-dim)',
+                  opacity:        1 - progress,
+                  height:         progress >= 1 ? 0 : 18,
+                  marginBottom:   progress >= 1 ? 0 : 4,
+                  transition:     'opacity 0.15s ease-out, height 0.15s ease-out',
                 }}
               >
-                {Array.from({ length: 4 }, (_, i) => activeMenu.recipes[i] ?? null).map((recipe, i) => (
-                  <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
-                    {recipe?.image_url ? (
-                      <img
-                        src={recipe.image_url}
-                        alt={recipe.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
-                      />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, opacity: 0.3 }}>
-                        🍽️
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                This week
+              </p>
 
-              {/* Card body — always visible; padding tightens as card compacts */}
-              <div
+              <button
+                onClick={() => { setSelectedMenu(activeMenu); setSelectedRecipeId(null); setView('detail') }}
                 style={{
-                  padding: `${Math.max(4, Math.round(10 - 6 * progress))}px ${Math.max(8, Math.round(14 - 5 * progress))}px`,
-                  transition: 'padding 0.1s ease',
+                  width:        '100%',
+                  textAlign:    'left' as const,
+                  cursor:       'pointer',
+                  padding:      0,
+                  background:   'var(--color-surface)',
+                  border:       '1.5px solid rgba(90,107,66,0.5)',
+                  borderRadius: progress > 0.85 ? 12 : 16,
+                  overflow:     'hidden',
+                  transition:   'border-radius 0.2s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: progress > 0.85 ? 6 : 8 }}>
-                  <span
-                    style={{
-                      color:        'var(--color-text)',
-                      fontSize:     progress > 0.85 ? 14 : 15,
-                      fontWeight:   600,
-                      fontFamily:   'Georgia, serif',
-                      flex:         1,
-                      minWidth:     0,
-                      whiteSpace:   'nowrap',
-                      overflow:     'hidden',
-                      textOverflow: 'ellipsis',
-                      lineHeight:   1.2,
-                    }}
-                  >
-                    {activeMenu.name}
-                  </span>
-                  {activeMenu.dominant_protein && (
-                    <ProteinBadge protein={activeMenu.dominant_protein as ProteinType} />
-                  )}
-                </div>
-
-                {/* Recipe list — fades out */}
+                {/* Image grid — collapses */}
                 <div
                   style={{
-                    display:       'flex',
-                    flexDirection: 'column',
-                    gap:           2,
-                    marginTop:     progress < 1 ? 4 : 0,
-                    maxHeight:     Math.round(80 * (1 - progress)),
-                    opacity:       1 - progress,
-                    overflow:      'hidden',
-                    transition:    'max-height 0.1s ease, opacity 0.15s ease',
+                    display:              'grid',
+                    gridTemplateColumns:  '1fr 1fr',
+                    gridTemplateRows:     '1fr 1fr',
+                    gap:                  2,
+                    height:               Math.round(160 * (1 - progress)),
+                    overflow:             'hidden',
+                    transition:           'height 0.2s ease-out, opacity 0.2s ease-out',
+                    opacity:              1 - progress,
                   }}
                 >
-                  {activeMenu.recipes.slice(0, 4).map(r => (
-                    <span
-                      key={r.id}
-                      style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    >
-                      {r.title}
-                    </span>
+                  {Array.from({ length: 4 }, (_, i) => activeMenu.recipes[i] ?? null).map((recipe, i) => (
+                    <div key={i} style={{ background: 'var(--color-subtle)', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
+                      {recipe?.image_url ? (
+                        <img
+                          src={recipe.image_url}
+                          alt={recipe.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, opacity: 0.3 }}>
+                          🍽️
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
+
+                {/* Card body — always visible; padding tightens as card compacts */}
+                <div
+                  style={{
+                    padding:    `${Math.round(10 - progress * 4)}px 14px`,
+                    transition: 'padding 0.2s ease-out',
+                  }}
+                >
+                  <div
+                    style={{
+                      display:      'flex',
+                      alignItems:   'center',
+                      gap:          progress > 0.85 ? 6 : 8,
+                      marginBottom: progress > 0.8 ? 0 : 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color:        'var(--color-text)',
+                        fontSize:     progress > 0.85 ? 14 : 15,
+                        fontWeight:   600,
+                        fontFamily:   'Georgia, serif',
+                        flex:         1,
+                        minWidth:     0,
+                        whiteSpace:   'nowrap',
+                        overflow:     'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight:   1.2,
+                      }}
+                    >
+                      {activeMenu.name}
+                    </span>
+                    {activeMenu.dominant_protein && (
+                      <ProteinBadge protein={activeMenu.dominant_protein as ProteinType} />
+                    )}
+                  </div>
+
+                  {/* Recipe list — fades out */}
+                  <div
+                    style={{
+                      display:       'flex',
+                      flexDirection: 'column',
+                      gap:           2,
+                      marginTop:     progress < 1 ? 4 : 0,
+                      maxHeight:     Math.round(80 * (1 - progress)),
+                      opacity:       1 - progress,
+                      overflow:      'hidden',
+                      transition:    'max-height 0.2s ease-out, opacity 0.2s ease-out',
+                    }}
+                  >
+                    {activeMenu.recipes.slice(0, 4).map(r => (
+                      <span
+                        key={r.id}
+                        style={{ color: 'var(--color-text-dim)', fontSize: 12, fontFamily: 'var(--font-geist-sans)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {r.title}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* "All menus" divider — inside sticky when active week exists */}
+            {otherMenus.length > 0 && (
+              <div className="px-4 pt-2 pb-1.5">
+                <span
+                  className="text-[9px] uppercase tracking-[0.1em]"
+                  style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
+                >
+                  All menus
+                </span>
               </div>
-            </button>
+            )}
           </div>
         )}
 
-        {/* "All menus" divider */}
-        {otherMenus.length > 0 && (
+        {!activeMenu && otherMenus.length > 0 && (
           <div className="px-4 pt-2 pb-1.5">
             <span
               className="text-[9px] uppercase tracking-[0.1em]"
@@ -426,14 +454,7 @@ export default function MenusPage() {
             </span>
           </div>
         )}
-      </div>
 
-      {/* Scrollable list */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}
-      >
         <div className="px-4">
           {loading ? (
             <div className="flex justify-center pt-20">
