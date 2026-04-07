@@ -266,6 +266,22 @@ export default function ShoppingPage() {
     if (sourceFilter?.id === id) setSourceFilter(null)
   }
 
+  // ── Remove single shopping item (immediate) ───────────────────────────────
+  function handleRemove(item: ShoppingListItem) {
+    setItems(prev => prev.filter(i => i.id !== item.id))
+    setRecentlyRemoved(prev =>
+      [{ name: item.name, amount: item.amount, unit: item.unit, store_section: item.store_section },
+        ...prev].slice(0, 9),
+    )
+    const timer = checkingTimers.current.get(item.id)
+    if (timer) clearTimeout(timer)
+    checkingTimers.current.delete(item.id)
+    setChecking(prev => { const next = new Set(prev); next.delete(item.id); return next })
+    if (!item.id.startsWith('temp-')) {
+      fetch(`/api/shopping/${item.id}`, { method: 'DELETE' })
+    }
+  }
+
   // ── Merge ─────────────────────────────────────────────────────────────────
   function handleLongPress(item: ShoppingListItem) {
     setMergeSourceId(item.id)
@@ -515,16 +531,66 @@ export default function ShoppingPage() {
         {/* Merge mode banner */}
         {mergeSourceId && !mergeTargetId && (
           <div
-            className="flex items-center justify-between px-4 py-2"
-            style={{ background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}
+            style={{
+              width:           '100%',
+              background:      'var(--color-accent-light)',
+              borderTop:       '1px solid var(--color-accent)',
+              padding:         '12px 20px',
+              display:         'flex',
+              alignItems:      'center',
+              justifyContent:  'space-between',
+              gap:             12,
+            }}
           >
-            <span className="text-[11px] text-amber-400" style={{ fontFamily: 'var(--font-geist-mono)' }}>
-              Tap another item to merge into {mergeSource?.name}
+            <span
+              style={{
+                fontFamily: 'var(--font-geist-mono)',
+                fontSize:   13,
+                color:      'var(--color-accent)',
+                flex:       1,
+              }}
+            >
+              {mergeSource ? 'Tap another item to merge' : 'Tap an item'}
             </span>
+
             <button
+              type="button"
+              onClick={() => {
+                const item = items.find(i => i.id === mergeSourceId)
+                if (item) handleRemove(item)
+                handleMergeCancel()
+              }}
+              style={{
+                minHeight:    44,
+                padding:      '10px 16px',
+                borderRadius: 10,
+                border:       '1px solid rgba(192,87,74,0.3)',
+                background:   'rgba(192,87,74,0.08)',
+                fontFamily:   'var(--font-geist-mono)',
+                fontSize:     13,
+                color:        '#c0574a',
+                cursor:       'pointer',
+                flexShrink:   0,
+              }}
+            >
+              Delete
+            </button>
+
+            <button
+              type="button"
               onClick={handleMergeCancel}
-              className="text-[11px] text-amber-400/60 border border-amber-400/20 rounded-lg px-2.5 py-1"
-              style={{ fontFamily: 'var(--font-geist-mono)' }}
+              style={{
+                minHeight:    44,
+                padding:      '10px 16px',
+                borderRadius: 10,
+                border:       '1px solid var(--color-border)',
+                background:   'var(--color-surface)',
+                fontFamily:   'var(--font-geist-mono)',
+                fontSize:     13,
+                color:        'var(--color-text-dim)',
+                cursor:       'pointer',
+                flexShrink:   0,
+              }}
             >
               Cancel
             </button>
@@ -702,18 +768,21 @@ function ItemRow({
       onPointerDown={startLongPress}
       onPointerUp={cancelLongPress}
       onPointerLeave={cancelLongPress}
+      onContextMenu={e => e.preventDefault()}
       className={`flex items-center gap-3 cursor-pointer${isMergeSource ? ' animate-pulse' : ''}`}
       style={{
-        opacity:       isChecking ? 0.5 : 1,
-        background:    isMergeSource
+        opacity:            isChecking ? 0.5 : 1,
+        background:         isMergeSource
           ? 'rgba(245,158,11,0.14)'
           : isMergeMode
             ? 'rgba(245,158,11,0.07)'
             : 'var(--color-surface)',
-        border:        '1px solid var(--color-border)',
-        borderRadius:  10,
-        marginBottom:  4,
-        padding:       '11px 12px',
+        border:             '1px solid var(--color-border)',
+        borderRadius:       10,
+        marginBottom:       4,
+        padding:            '11px 12px',
+        userSelect:         'none',
+        WebkitUserSelect:   'none',
       }}
     >
       <div style={{
@@ -725,9 +794,11 @@ function ItemRow({
       <span
         className="flex-1 text-[14px]"
         style={{
-          color:          'var(--color-text)',
-          fontFamily:     'var(--font-geist-sans)',
-          textDecoration: isChecking ? 'line-through' : 'none',
+          color:            'var(--color-text)',
+          fontFamily:       'var(--font-geist-sans)',
+          textDecoration:   isChecking ? 'line-through' : 'none',
+          userSelect:       'none',
+          WebkitUserSelect: 'none',
         }}
       >
         {item.name}
@@ -736,7 +807,12 @@ function ItemRow({
       {amountStr && (
         <span
           className="shrink-0 text-[11px]"
-          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
+          style={{
+            color:            'var(--color-text-dim)',
+            fontFamily:       'var(--font-geist-mono)',
+            userSelect:       'none',
+            WebkitUserSelect: 'none',
+          }}
         >
           {amountStr}
         </span>
