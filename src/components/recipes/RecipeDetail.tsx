@@ -74,6 +74,32 @@ export default function RecipeDetail({ recipe, onRecipeUpdate, onBack }: RecipeD
   const [addingToList,    setAddingToList]    = useState(false)
   const [shoppingToast,   setShoppingToast]   = useState(false)
   const [descExpanded,    setDescExpanded]    = useState(false)
+  const [savingRating,    setSavingRating]    = useState(false)
+
+  async function handleRating(stars: number) {
+    setSavingRating(true)
+    try {
+      const res = await fetch(`/api/recipes/${currentRecipe.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ rating: stars === 0 ? null : stars }),
+      })
+      if (res.ok) {
+        const data = (await res.json()) as { recipe?: Recipe }
+        if (data.recipe) {
+          setCurrentRecipe(data.recipe)
+          onRecipeUpdate?.(data.recipe)
+        } else {
+          setCurrentRecipe(prev => ({
+            ...prev,
+            rating: stars === 0 ? undefined : stars,
+          }))
+        }
+      }
+    } finally {
+      setSavingRating(false)
+    }
+  }
 
   async function handleAddToShoppingList() {
     setAddingToList(true)
@@ -213,24 +239,49 @@ export default function RecipeDetail({ recipe, onRecipeUpdate, onBack }: RecipeD
             >
               {CATEGORY_EMOJI[currentRecipe.category]} {currentRecipe.category}
             </span>
-            {currentRecipe.rating != null && (
-              <div style={{
-                background: 'rgba(0,0,0,0.55)',
+            <div
+              style={{
+                background:     'rgba(0,0,0,0.55)',
                 backdropFilter: 'blur(6px)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 6,
-                padding: '3px 6px',
-                display: 'flex',
-                gap: 1,
-              }}>
-                {[1,2,3,4,5].map(i => (
-                  <span key={i} style={{
-                    fontSize: 10,
-                    color: i <= currentRecipe.rating! ? '#f0b429' : 'rgba(255,255,255,0.2)',
-                  }}>★</span>
-                ))}
-              </div>
-            )}
+                border:         '1px solid rgba(255,255,255,0.15)',
+                borderRadius:   6,
+                padding:        '4px 8px',
+                display:        'flex',
+                gap:            2,
+                alignItems:     'center',
+              }}
+            >
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation()
+                    handleRating(currentRecipe.rating === star ? 0 : star)
+                  }}
+                  disabled={savingRating}
+                  style={{
+                    background:   'none',
+                    border:       'none',
+                    cursor:       'pointer',
+                    padding:      '2px 1px',
+                    fontSize:     14,
+                    lineHeight:   1,
+                    color:        star <= (currentRecipe.rating ?? 0) ? '#f0b429' : 'rgba(255,255,255,0.25)',
+                    transition:   'color 0.15s ease',
+                    opacity:      savingRating ? 0.5 : 1,
+                    minWidth:     20,
+                    minHeight:    20,
+                    display:      'flex',
+                    alignItems:   'center',
+                    justifyContent: 'center',
+                  }}
+                  aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
           </div>
           <h1
             className="text-[26px] font-bold leading-tight"

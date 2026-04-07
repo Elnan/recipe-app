@@ -147,8 +147,13 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
     setSaving(true)
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, created_at, updated_at, ...updates } = draft
-      await onSave(updates)
+      const { id, created_at, updated_at, ...rest } = draft
+      const updates: Partial<NewRecipe> = { ...rest }
+      if (recipe.rating != null && draft.rating === undefined) {
+        await onSave({ ...updates, rating: null } as unknown as Partial<NewRecipe>)
+      } else {
+        await onSave(updates)
+      }
     } finally {
       setSaving(false)
     }
@@ -283,6 +288,49 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
             onChange={vals => set('cooking_method', vals.length > 0 ? vals.join(',') : undefined)}
             accent={accent}
           />
+        </div>
+
+        {/* Rating */}
+        <div style={{ padding: '0 0 20px' }}>
+          <p
+            style={{
+              fontFamily:      'var(--font-geist-mono)',
+              fontSize:        10,
+              textTransform:   'uppercase',
+              letterSpacing:   '0.1em',
+              color:           'var(--color-text-dim)',
+              marginBottom:    8,
+            }}
+          >
+            Rating
+          </p>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                type="button"
+                onClick={() =>
+                  setDraft(prev => ({
+                    ...prev,
+                    rating: prev.rating === star ? undefined : star,
+                  }))
+                }
+                style={{
+                  background:   'none',
+                  border:       'none',
+                  cursor:       'pointer',
+                  padding:      '4px',
+                  fontSize:     32,
+                  lineHeight:   1,
+                  color:        star <= (draft.rating ?? 0) ? '#f0b429' : 'var(--color-border)',
+                  transition:   'color 0.15s ease',
+                }}
+                aria-label={`Rate ${star} stars`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Description */}
