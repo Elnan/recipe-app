@@ -94,21 +94,15 @@ export default function CookingMode({
           Enjoy your meal!
         </h1>
         <p
-          className="text-[12px] uppercase tracking-[0.1em]"
-          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
+          className="text-[12px] uppercase tracking-[0.1em] text-white/30"
+          style={{ fontFamily: 'var(--font-geist-mono)' }}
         >
           {recipe.title}
         </p>
         <button
-          type="button"
           onClick={() => router.back()}
-          className="mt-4 min-h-[44px] rounded-xl border px-6 py-3 text-[13px] transition-opacity hover:opacity-90"
-          style={{
-            fontFamily:   'var(--font-geist-mono)',
-            borderColor:  'var(--color-border)',
-            color:        'var(--color-text-dim)',
-            background:   'var(--color-surface)',
-          }}
+          className="mt-4 rounded-xl border border-white/10 px-6 py-3 text-[13px] text-white/50 transition-colors hover:text-white"
+          style={{ fontFamily: 'var(--font-geist-mono)' }}
         >
           ← Back to recipe
         </button>
@@ -133,13 +127,13 @@ export default function CookingMode({
             justifyContent: 'space-between',
             padding: desktop ? '12px 16px' : '8px 12px',
             borderRadius: desktop ? 12 : 10,
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
             <span style={{
               fontFamily: 'var(--font-geist-sans)',
               fontSize: desktop ? 18 : 12,
-              color: 'var(--color-text)',
+              color: 'rgba(255,255,255,0.7)',
               flex: 1, minWidth: 0,
               overflow: 'hidden', textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -172,11 +166,11 @@ export default function CookingMode({
       <div
         className="shrink-0 pt-4 pb-3"
         onClick={e => e.stopPropagation()}
-        style={{ background: 'var(--color-bg)' }}
+        style={{ background: 'rgba(10,10,10,0.95)' }}
       >
         <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32 }}>
           {/* Progress bar */}
-          <div className="h-[3px] w-full rounded-full mb-3" style={{ background: 'var(--color-border)' }}>
+          <div className="h-[3px] w-full rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / total) * 100}%`, background: 'var(--color-accent)' }}
@@ -185,21 +179,15 @@ export default function CookingMode({
 
           <div className="flex items-center justify-between">
             <span
-              className="text-[11px] uppercase tracking-[0.08em]"
-              style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
+              className="text-[11px] text-white/30 uppercase tracking-[0.08em]"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
             >
               Step {step + 1} of {total}
             </span>
             <button
-              type="button"
               onClick={() => router.back()}
-              className="text-[11px] rounded-lg border px-3 py-1.5 min-h-[36px] transition-opacity hover:opacity-80"
-              style={{
-                fontFamily:   'var(--font-geist-mono)',
-                borderColor:  'var(--color-border)',
-                color:        'var(--color-text-dim)',
-                background:   'var(--color-surface)',
-              }}
+              className="text-[11px] text-white/30 hover:text-white/60 transition-colors border border-white/10 rounded-lg px-3 py-1"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
             >
               ✕ Exit
             </button>
@@ -226,7 +214,7 @@ export default function CookingMode({
               style={{
                 fontFamily: 'var(--font-geist-mono)',
                 fontSize: 10, textTransform: 'uppercase',
-                letterSpacing: '0.1em', color: 'var(--color-text-dim)',
+                letterSpacing: '0.1em', color: 'rgba(255,255,255,0.25)',
                 margin: '0 0 24px',
               }}
             >
@@ -244,7 +232,7 @@ export default function CookingMode({
           </div>
 
           {/* Divider */}
-          <div style={{ width: 1, flexShrink: 0, margin: '0 0 40px', background: 'var(--color-border)' }} />
+          <div style={{ width: 1, flexShrink: 0, margin: '0 0 40px', background: 'rgba(255,255,255,0.06)' }} />
 
           {/* Right — ingredients */}
           <div style={{ flex: 1, paddingLeft: 48, overflowY: 'auto', paddingBottom: 40, paddingTop: 24 }}>
@@ -252,14 +240,14 @@ export default function CookingMode({
               style={{
                 fontFamily: 'var(--font-geist-mono)',
                 fontSize: 10, textTransform: 'uppercase',
-                letterSpacing: '0.1em', color: 'var(--color-text-dim)',
+                letterSpacing: '0.1em', color: 'rgba(255,255,255,0.25)',
                 margin: '0 0 16px',
               }}
             >
               This step
             </p>
             {stepIngs.length > 0 ? renderIngredientRows(true) : (
-              <p style={{ color: 'var(--color-text-dim)', fontSize: 13, fontFamily: 'var(--font-geist-sans)' }}>
+              <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, fontFamily: 'var(--font-geist-sans)' }}>
                 No specific ingredients
               </p>
             )}
@@ -278,8 +266,8 @@ export default function CookingMode({
         >
           <div style={{ maxWidth: 600, margin: '0 auto', paddingLeft: 32, paddingRight: 32, paddingTop: 24, paddingBottom: 24, width: '100%' }}>
             <p
-              className="text-[10px] uppercase tracking-[0.1em] mb-6"
-              style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
+              className="text-[10px] uppercase tracking-[0.1em] text-white/25 mb-6"
+              style={{ fontFamily: 'var(--font-geist-mono)' }}
             >
               {recipe.title}
             </p>
@@ -304,13 +292,12 @@ export default function CookingMode({
           onClick={e => e.stopPropagation()}
         >
           <button
-            type="button"
             onClick={() => navigate('back')}
             style={{
               fontFamily: 'var(--font-geist-mono)', fontSize: 13,
-              color: step > 0 ? 'var(--color-text-dim)' : 'var(--color-border)',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
+              color: step > 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 10, padding: '10px 20px',
               cursor: step > 0 ? 'pointer' : 'default',
             }}
@@ -328,18 +315,17 @@ export default function CookingMode({
                   ? 'var(--color-accent)'
                   : i < step
                     ? 'rgba(90,107,66,0.4)'
-                    : 'var(--color-border)',
+                    : 'rgba(255,255,255,0.1)',
                 transition: 'all 0.2s ease',
               }} />
             ))}
           </div>
 
           <button
-            type="button"
             onClick={() => navigate('forward')}
             style={{
               fontFamily: 'var(--font-geist-mono)', fontSize: 13,
-              color: 'var(--color-bg)',
+              color: '#fff',
               background: 'var(--color-accent)',
               border: 'none',
               borderRadius: 10, padding: '10px 20px',
@@ -353,7 +339,7 @@ export default function CookingMode({
         /* Mobile: tap hints */
         <div
           className="shrink-0 flex items-center justify-between px-8 pb-10 pt-2 pointer-events-none"
-          style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)', fontSize: 11 }}
+          style={{ color: 'rgba(255,255,255,0.18)', fontFamily: 'var(--font-geist-mono)', fontSize: 11 }}
         >
           <span>{step > 0 ? '← Prev' : ''}</span>
           <span>{step === total - 1 ? 'Finish →' : 'Next →'}</span>

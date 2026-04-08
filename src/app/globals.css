@@ -67,13 +67,3 @@ body {
 }
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
-
-/* Shopping: keyboard open — hide fixed bottom navs, reclaim scroll padding */
-body[data-shopping-search-focus] {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-body[data-shopping-search-focus] [data-app-bottom-nav] {
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(100%);
-}

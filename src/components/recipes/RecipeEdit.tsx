@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { Recipe, NewRecipe, RecipeCategory } from '../../../types/recipe'
 import { RecipeIcon } from '../../../lib/recipe-icons'
 import ImagePickerSheet from './ImagePickerSheet'
@@ -30,6 +30,26 @@ const METHOD_OPTIONS = ['pan', 'oven', 'pot', 'one-pan', 'grill', 'wok', 'no-coo
 
 const CATEGORY_OPTIONS: RecipeCategory[] = ['dinner', 'breakfast', 'baking', 'dessert', 'other']
 
+const COMMON_UNITS = [
+  'g', 'kg',
+  'ml', 'dl', 'l',
+  'ts', 'ss',
+  'stk', 'pk', 'boks',
+  'fedd', 'neve', 'skive',
+] as const
+
+const UNIT_SHEET_GROUPS: Array<{ title: string; units: readonly string[] }> = [
+  { title: 'Vekt',   units: ['g', 'kg'] },
+  { title: 'Volum',  units: ['ml', 'dl', 'l'] },
+  { title: 'Mål',    units: ['ts', 'ss'] },
+  { title: 'Stykk',  units: ['stk', 'pk', 'boks'] },
+  { title: 'Annet',  units: ['fedd', 'neve', 'skive'] },
+]
+
+function isCommonUnit(u: string): boolean {
+  return (COMMON_UNITS as readonly string[]).includes(u)
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface RecipeEditProps {
@@ -47,9 +67,28 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [saving,            setSaving]            = useState(false)
   const [deleting,          setDeleting]          = useState(false)
+  const [isDesktop,         setIsDesktop]         = useState(false)
+  const [unitPickerIndex,   setUnitPickerIndex]   = useState<number | null>(null)
+  const [unitSheetCustom,   setUnitSheetCustom]   = useState('')
+  const [mobileAnnetTick,   setMobileAnnetTick]   = useState(0)
+  const mobileAnnetRows     = useRef<Set<number>>(new Set())
 
   const accent = CATEGORY_ACCENT[draft.category] ?? CATEGORY_ACCENT.other
   const hasHeroPhoto = !!draft.image_url
+
+  useEffect(() => {
+    setIsDesktop(typeof window !== 'undefined' && window.innerWidth >= 768)
+    const handler = () => setIsDesktop(window.innerWidth >= 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  useEffect(() => {
+    if (unitPickerIndex == null) return
+    const u = draft.ingredients[unitPickerIndex]?.unit ?? ''
+    setUnitSheetCustom(isCommonUnit(u) ? '' : u)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset custom field when opening picker
+  }, [unitPickerIndex])
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
 
@@ -82,17 +121,32 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
   }
 
   function removeIngredient(i: number) {
+    const prev = mobileAnnetRows.current
+    const next = new Set<number>()
+    prev.forEach(j => {
+      if (j === i) return
+      next.add(j < i ? j : j - 1)
+    })
+    mobileAnnetRows.current = next
     setDraft(d => ({ ...d, ingredients: d.ingredients.filter((_, idx) => idx !== i) }))
   }
 
   function moveIngredient(i: number, dir: -1 | 1) {
     setDraft(d => {
+      const j = i + dir
+      if (j < 0 || j >= d.ingredients.length) return d
+      const set = mobileAnnetRows.current
+      const hadI = set.has(i)
+      const hadJ = set.has(j)
+      set.delete(i)
+      set.delete(j)
+      if (hadI) set.add(j)
+      if (hadJ) set.add(i)
       const arr = [...d.ingredients]
-      const j   = i + dir
-      if (j < 0 || j >= arr.length) return d
       ;[arr[i], arr[j]] = [arr[j], arr[i]]
       return { ...d, ingredients: arr }
     })
+    setMobileAnnetTick(t => t + 1)
   }
 
   function addIngredient() {
@@ -433,14 +487,93 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
                     style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
                   />
 
-                  {/* Unit */}
-                  <input
-                    value={ing.unit}
-                    onChange={e => updateIngredient(i, { unit: e.target.value })}
-                    placeholder="unit"
-                    className="w-14 bg-transparent focus:outline-none border-b pb-1"
-                    style={{ color: 'var(--color-text-dim)', borderColor: 'var(--color-border)', fontFamily: 'var(--font-geist-mono)', fontSize: 16 }}
-                  />
+                  {/* Unit — desktop sheet vs mobile native select */}
+                  {isDesktop ? (
+                    <button
+                      type="button"
+                      onClick={() => setUnitPickerIndex(i)}
+                      className="shrink-0"
+                      style={{
+                        minWidth:     56,
+                        padding:      '4px 8px',
+                        borderRadius: 6,
+                        background:   'var(--color-surface)',
+                        border:       '1px solid var(--color-border)',
+                        fontFamily:   'var(--font-geist-mono)',
+                        fontSize:     13,
+                        color:        'var(--color-text)',
+                        cursor:       'pointer',
+                      }}
+                    >
+                      {ing.unit || 'enh.'}
+                    </button>
+                  ) : !isCommonUnit(ing.unit ?? '') && (ing.unit || mobileAnnetRows.current.has(i)) ? (
+                    <input
+                      value={ing.unit ?? ''}
+                      onChange={e => {
+                        mobileAnnetRows.current.delete(i)
+                        setMobileAnnetTick(t => t + 1)
+                        updateIngredient(i, { unit: e.target.value })
+                      }}
+                      placeholder="enh."
+                      className="shrink-0"
+                      style={{
+                        width:        64,
+                        background:   'transparent',
+                        border:       'none',
+                        borderBottom: '1px solid var(--color-border)',
+                        color:        'var(--color-text)',
+                        fontFamily:   'var(--font-geist-mono)',
+                        fontSize:     16,
+                        padding:      '2px 0',
+                        outline:      'none',
+                      }}
+                    />
+                  ) : (
+                    <select
+                      value={(() => {
+                        const u = ing.unit ?? ''
+                        if (mobileAnnetRows.current.has(i)) return '__custom__'
+                        if (u === '') return ''
+                        return isCommonUnit(u) ? u : '__custom__'
+                      })()}
+                      onChange={e => {
+                        const v = e.target.value
+                        if (v === '__custom__') {
+                          mobileAnnetRows.current.add(i)
+                          setMobileAnnetTick(t => t + 1)
+                          updateIngredient(i, { unit: '' })
+                          return
+                        }
+                        mobileAnnetRows.current.delete(i)
+                        setMobileAnnetTick(t => t + 1)
+                        updateIngredient(i, { unit: v })
+                      }}
+                      className="shrink-0"
+                      style={{
+                        width:            64,
+                        background:       'transparent',
+                        border:           'none',
+                        borderBottom:     '1px solid var(--color-border)',
+                        color:            'var(--color-text)',
+                        fontFamily:       'var(--font-geist-mono)',
+                        fontSize:         16,
+                        padding:          '2px 0',
+                        outline:          'none',
+                        cursor:           'pointer',
+                        appearance:       'none',
+                        WebkitAppearance: 'none' as const,
+                      }}
+                    >
+                      <option value="">enh.</option>
+                      {COMMON_UNITS.map(u => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                      <option value="__custom__">Annet…</option>
+                    </select>
+                  )}
 
                   {/* Delete */}
                   <button
@@ -584,6 +717,101 @@ export default function RecipeEdit({ recipe, onSave, onCancel, onDelete }: Recip
           </button>
         </div>
       </div>
+
+      {/* ── Unit picker (desktop) ── */}
+      {unitPickerIndex != null && (
+        <>
+          <div
+            className="fixed inset-0 z-[55]"
+            style={{ background: 'rgba(0,0,0,0.35)' }}
+            onClick={() => setUnitPickerIndex(null)}
+            aria-hidden
+          />
+          <div
+            className="fixed left-0 right-0 z-[56] rounded-t-2xl border-t max-h-[70vh] overflow-y-auto"
+            style={{
+              bottom:          64,
+              background:      'var(--color-surface)',
+              borderColor:     'var(--color-border)',
+              padding:         '16px 20px 24px',
+              paddingBottom:   'max(24px, env(safe-area-inset-bottom))',
+              boxShadow:       '0 -8px 32px rgba(0,0,0,0.12)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] mb-4"
+              style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
+            >
+              Enhet
+            </p>
+            {UNIT_SHEET_GROUPS.map(group => (
+              <div key={group.title} className="mb-4 last:mb-3">
+                <p
+                  className="text-[10px] uppercase tracking-[0.08em] mb-2"
+                  style={{ fontFamily: 'var(--font-geist-mono)', color: 'var(--color-text-dim)' }}
+                >
+                  {group.title}
+                </p>
+                <div className="flex flex-wrap" style={{ gap: 8 }}>
+                  {group.units.map(u => {
+                    const active =
+                      draft.ingredients[unitPickerIndex]?.unit === u
+                    return (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => {
+                          updateIngredient(unitPickerIndex, { unit: u })
+                          setUnitPickerIndex(null)
+                        }}
+                        style={{
+                          padding:      '8px 14px',
+                          borderRadius: 8,
+                          border:       '1px solid',
+                          borderColor:  active ? 'var(--color-accent)' : 'var(--color-border)',
+                          background:   active
+                            ? 'color-mix(in srgb, var(--color-accent) 32%, var(--color-subtle))'
+                            : 'var(--color-subtle)',
+                          fontFamily:   'var(--font-geist-mono)',
+                          fontSize:     13,
+                          color:        active ? 'var(--color-text)' : 'var(--color-text-dim)',
+                          cursor:       'pointer',
+                          fontWeight:   active ? 600 : 400,
+                        }}
+                      >
+                        {u}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+            <input
+              value={unitSheetCustom}
+              onChange={e => setUnitSheetCustom(e.target.value)}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                updateIngredient(unitPickerIndex, { unit: unitSheetCustom.trim() })
+                setUnitPickerIndex(null)
+              }}
+              placeholder="Skriv selv…"
+              className="w-full mt-1"
+              style={{
+                background:   'var(--color-subtle)',
+                border:       '1px solid var(--color-border)',
+                borderRadius: 8,
+                padding:      '10px 12px',
+                fontFamily:   'var(--font-geist-mono)',
+                fontSize:     13,
+                color:        'var(--color-text)',
+                outline:      'none',
+              }}
+            />
+          </div>
+        </>
+      )}
 
       {/* ── Image picker ── */}
       {showImagePicker && (

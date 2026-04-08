@@ -15,7 +15,6 @@ export default function BottomNav({ onImportClick }: { onImportClick?: () => voi
 
   return (
     <nav
-      data-app-bottom-nav
       style={{
         position:        'fixed',
         bottom:          0,

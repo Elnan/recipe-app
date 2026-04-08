@@ -159,7 +159,7 @@ export default function MenusPage() {
     setScrollY(top)
     const raw = Math.min(1, top / 100)
     requestAnimationFrame(() => {
-      const lerp = smoothProgress.current + (raw - smoothProgress.current) * 0.5
+      const lerp = smoothProgress.current + (raw - smoothProgress.current) * 0.3
       smoothProgress.current = lerp
       setDisplayProgress(lerp)
     })
@@ -231,12 +231,6 @@ export default function MenusPage() {
   }
 
   // ── List view ──────────────────────────────────────────────────────────
-
-  /** Scroll-synced progress (no lerp) — spacing + “This week” track real scroll so mobile matches desktop. */
-  const rawProgress = Math.min(1, scrollY / 100)
-  const hideThisWeekLabel = scrollY > 0
-  /** Equal padding above and below the active card (min 4px so collapsed card never sits flush). */
-  const activeCardVerticalGutter = Math.max(4, Math.round(4 - rawProgress * 3))
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', height: '100dvh' }}>
@@ -315,23 +309,24 @@ export default function MenusPage() {
         {activeMenu && (
           <div
             style={{
-              position:     'sticky',
-              top:          0,
-              zIndex:       10,
-              background:   'var(--color-bg)',
-              paddingTop:   activeCardVerticalGutter,
+              position:      'sticky',
+              top:           0,
+              zIndex:        10,
+              background:    'var(--color-bg)',
+              paddingBottom: Math.round(8 - displayProgress * 6),
             }}
           >
-            <div className="px-3 pb-0">
-              {/* "This week" — hidden as soon as scroll starts (no lerp / no transition) */}
+            <div className="px-3 pt-1 pb-0">
+              {/* "This week" label — fades out */}
               <p
                 className="text-[9px] uppercase tracking-[0.1em] pl-0.5 overflow-hidden"
                 style={{
-                  fontFamily:   'var(--font-geist-mono)',
-                  color:        'var(--color-text-dim)',
-                  opacity:      hideThisWeekLabel ? 0 : 1,
-                  height:       hideThisWeekLabel ? 0 : 18,
-                  marginBottom: hideThisWeekLabel ? 0 : 4,
+                  fontFamily:     'var(--font-geist-mono)',
+                  color:          'var(--color-text-dim)',
+                  opacity:        1 - displayProgress,
+                  height:         displayProgress >= 1 ? 0 : 18,
+                  marginBottom:   displayProgress >= 1 ? 0 : 4,
+                  transition:     'opacity 0.15s ease-out, height 0.15s ease-out',
                 }}
               >
                 This week
@@ -447,7 +442,7 @@ export default function MenusPage() {
             {otherMenus.length > 0 && (
               <div
                 className="px-4 pb-1.5"
-                style={{ marginTop: activeCardVerticalGutter }}
+                style={{ marginTop: Math.round(8 - displayProgress * 6) }}
               >
                 <span
                   className="text-[9px] uppercase tracking-[0.1em]"
