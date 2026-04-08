@@ -159,7 +159,7 @@ export default function MenusPage() {
     setScrollY(top)
     const raw = Math.min(1, top / 100)
     requestAnimationFrame(() => {
-      const lerp = smoothProgress.current + (raw - smoothProgress.current) * 0.3
+      const lerp = smoothProgress.current + (raw - smoothProgress.current) * 0.5
       smoothProgress.current = lerp
       setDisplayProgress(lerp)
     })
@@ -313,7 +313,7 @@ export default function MenusPage() {
               top:           0,
               zIndex:        10,
               background:    'var(--color-bg)',
-              paddingBottom: Math.round(8 - displayProgress * 6),
+              paddingBottom: Math.round(4 - displayProgress * 3),
             }}
           >
             <div className="px-3 pt-1 pb-0">
@@ -442,7 +442,7 @@ export default function MenusPage() {
             {otherMenus.length > 0 && (
               <div
                 className="px-4 pb-1.5"
-                style={{ marginTop: Math.round(8 - displayProgress * 6) }}
+                style={{ marginTop: Math.round(4 - displayProgress * 3) }}
               >
                 <span
                   className="text-[9px] uppercase tracking-[0.1em]"
