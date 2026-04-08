@@ -141,3 +141,6 @@
   / Profile — Import moves to a centralised position
 - Do not build until RLS is implemented
 
+## Late fixes that needs deeper work
+
+- Active menu collapse animation
