@@ -5,7 +5,7 @@ const HAIKU_INPUT_COST_PER_M  = 0.80
 const HAIKU_OUTPUT_COST_PER_M = 4.00
 
 export type AiLogEntry = {
-  sourceType:       'url' | 'text' | 'photo'
+  sourceType:       'url' | 'text' | 'photo' | 'photos'
   model:            string
   inputTokens:      number
   outputTokens:     number

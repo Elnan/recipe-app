@@ -29,10 +29,6 @@ const CATEGORY_ACCENT: Record<string, string> = {
   other:     '#52b788',
 }
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  dinner: '🍽️', breakfast: '☀️', baking: '🍞', dessert: '🍮', other: '🥄',
-}
-
 export default function RecipesPage() {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
@@ -239,7 +235,7 @@ export default function RecipesPage() {
                     fontWeight:    active ? 600 : 400,
                   }}
                 >
-                  {cat === 'all' ? 'All' : `${CATEGORY_EMOJI[cat]} ${cat}`}
+                  {cat === 'all' ? 'All' : `${cat}`}
                 </button>
               )
             })}

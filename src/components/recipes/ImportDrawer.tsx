@@ -19,12 +19,21 @@ type DrawerState  = 'input' | 'loading' | 'preview' | 'cached'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+function resizeImage(file: File, maxPx = 1024): Promise<string> {
+  return new Promise(resolve => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.src = url
   })
 }
 
@@ -305,6 +314,7 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
   const [error,         setError]         = useState<string | null>(null)
   const [parsedRecipe,  setParsedRecipe]  = useState<NewRecipe | null>(null)
   const [cachedRecipe,  setCachedRecipe]  = useState<Recipe | null>(null)
+  const [photos,        setPhotos]        = useState<File[]>([])
   const [dragOver,      setDragOver]      = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -333,6 +343,7 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
       setParsedRecipe(null)
       setCachedRecipe(null)
       setUrlInput('')
+      setPhotos([])
       if (!prefillText) setTextInput('')
     }, 300)
   }
@@ -410,22 +421,25 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
     }
   }
 
-  // ── Photo submit ────────────────────────────────────────────────────────────
+  // ── Photo helpers ────────────────────────────────────────────────────────────
 
-  async function handlePhotoFile(file: File) {
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return
-    }
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).filter(f => f.type.startsWith('image/'))
+    setPhotos(prev => [...prev, ...files].slice(0, 6))
+    e.target.value = ''
+  }
+
+  async function handlePhotosSubmit() {
+    if (photos.length === 0) return
     setError(null)
     setDrawerState('loading')
 
     try {
-      const base64    = await fileToBase64(file)
-      const res       = await fetch('/api/recipes/import/photo', {
+      const base64Images = await Promise.all(photos.map(f => resizeImage(f)))
+      const res = await fetch('/api/recipes/import/photo', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ image: base64, mediaType: file.type }),
+        body:    JSON.stringify({ images: base64Images }),
       })
       const data = await res.json()
 
@@ -573,44 +587,97 @@ export default function ImportDrawer({ open, onClose, onSave, onUpdate, prefillT
               {/* Photo tab */}
               {tab === 'photo' && (
                 <div className="flex flex-col gap-3">
-                  <div
-                    className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer"
-                    style={{
-                      background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent',
-                      borderColor: dragOver ? 'rgba(244,162,97,0.6)' : 'var(--color-border)',
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={e => {
-                      e.preventDefault()
-                      setDragOver(false)
-                      const file = e.dataTransfer.files[0]
-                      if (file) handlePhotoFile(file)
-                    }}
-                  >
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="17 8 12 3 7 8"/>
-                      <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <p
-                      className="text-[12px] text-center"
-                      style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
-                    >
-                      Drop image here or tap to select
-                    </p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
-                      onChange={e => {
-                        const file = e.target.files?.[0]
-                        if (file) handlePhotoFile(file)
+                  {/* Drop zone — shown when no photos selected */}
+                  {photos.length === 0 && (
+                    <div
+                      className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-colors cursor-pointer"
+                      style={{
+                        background: dragOver ? 'rgba(244,162,97,0.04)' : 'transparent',
+                        borderColor: dragOver ? 'rgba(244,162,97,0.6)' : 'var(--color-border)',
                       }}
-                    />
-                  </div>
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={e => {
+                        e.preventDefault()
+                        setDragOver(false)
+                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+                        if (files.length > 0) setPhotos(prev => [...prev, ...files].slice(0, 6))
+                      }}
+                    >
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <p
+                        className="text-[12px] text-center"
+                        style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--font-geist-mono)' }}
+                      >
+                        Drop images here or tap to select (max 6)
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        className="sr-only"
+                        onChange={handlePhotoSelect}
+                      />
+                    </div>
+                  )}
+
+                  {/* Thumbnail row — shown when photos selected */}
+                  {photos.length > 0 && (
+                    <>
+                      <div style={{
+                        display: 'flex', gap: 8, overflowX: 'auto',
+                        padding: '8px 0', scrollbarWidth: 'none',
+                      }}>
+                        {photos.map((file, i) => (
+                          <div key={`${file.name}-${i}`} style={{
+                            position: 'relative', flexShrink: 0,
+                            width: 72, height: 72, borderRadius: 10,
+                            overflow: 'hidden',
+                            border: '1px solid var(--color-border)',
+                          }}>
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt=""
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                            <button
+                              onClick={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
+                              style={{
+                                position: 'absolute', top: 4, right: 4,
+                                width: 20, height: 20, borderRadius: '50%',
+                                background: 'rgba(0,0,0,0.6)', border: 'none',
+                                color: '#fff', fontSize: 12, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', lineHeight: 1,
+                              }}
+                            >×</button>
+                          </div>
+                        ))}
+                        {photos.length < 6 && (
+                          <label style={{
+                            flexShrink: 0, width: 72, height: 72,
+                            borderRadius: 10, border: '2px dashed var(--color-border)',
+                            display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', cursor: 'pointer',
+                            color: 'var(--color-text-dim)', fontSize: 24,
+                          }}>
+                            +
+                            <input type="file" accept="image/jpeg,image/png,image/webp" multiple
+                              style={{ display: 'none' }}
+                              onChange={handlePhotoSelect} />
+                          </label>
+                        )}
+                      </div>
+                      <SubmitButton label="Import →" onClick={handlePhotosSubmit} disabled={photos.length === 0} />
+                    </>
+                  )}
+
                   {error && <ErrorNote message={error} />}
                 </div>
               )}

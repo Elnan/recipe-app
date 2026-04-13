@@ -42,12 +42,13 @@ Rules:
 - protein_type must be one of the four values: kjott (beef, pork, lamb), kylling (chicken, turkey), fisk (fish, seafood), vegetar (no meat or fish) — or null if unclear
 - if a field is unknown, use null (never omit it)
 - category must be one of the five values listed above
-- For Norwegian recipes: middag/hovedrett = dinner, frokost/nsj = breakfast, kake/bakst/dessert = baking or dessert. When in doubt for a main dish, prefer dinner over other.`
+- For Norwegian recipes: middag/hovedrett = dinner, frokost/lunsj = breakfast, brød/bolle/kake/bakst/dessert = baking or dessert. When in doubt for a main dish, prefer dinner over other.`
 
 export type AiParseInput =
-  | { type: 'text';  content: string;                    sourceIdentifier?: string }
-  | { type: 'url';   content: string;                    sourceIdentifier?: string }
-  | { type: 'photo'; content: string; mediaType: string; sourceIdentifier?: string }
+  | { type: 'text';   content: string;                    sourceIdentifier?: string }
+  | { type: 'url';    content: string;                    sourceIdentifier?: string }
+  | { type: 'photo';  content: string; mediaType: string; sourceIdentifier?: string }
+  | { type: 'photos'; images: Array<{ data: string; mediaType: string }>; sourceIdentifier?: string }
 
 // Returns parsed recipe or throws if AI response is unparseable
 export async function parseWithAi(input: AiParseInput): Promise<AiParseResult> {
@@ -76,6 +77,24 @@ export async function parseWithAi(input: AiParseInput): Promise<AiParseResult> {
 // ── Message builders ──────────────────────────────────────────────────────────
 
 function buildUserMessage(input: AiParseInput): Anthropic.MessageParam['content'] {
+  if (input.type === 'photos') {
+    const imageBlocks = input.images.map(img => ({
+      type: 'image' as const,
+      source: {
+        type:       'base64' as const,
+        media_type: img.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
+        data:       img.data,
+      },
+    }))
+    return [
+      ...imageBlocks,
+      {
+        type: 'text' as const,
+        text: 'You are given one or more images of a recipe. Extract the complete recipe combining information from all images. If the same information appears in multiple images, use the most complete version.',
+      },
+    ]
+  }
+
   if (input.type === 'photo') {
     return [
       {
